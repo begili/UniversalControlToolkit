@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniversalControlToolkit.WPF", "UniversalControlToolkit.WPF\UniversalControlToolkit.WPF.csproj", "{DDCD084D-6F56-4D3C-A92A-FD4BB4C8D963}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniversalControlToolkit.WPF.Test", "UniversalControlToolkit.WPF.Test\UniversalControlToolkit.WPF.Test.csproj", "{F8C73F18-D006-41C3-97BB-81B1F9E5B5BA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DDCD084D-6F56-4D3C-A92A-FD4BB4C8D963}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DDCD084D-6F56-4D3C-A92A-FD4BB4C8D963}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DDCD084D-6F56-4D3C-A92A-FD4BB4C8D963}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DDCD084D-6F56-4D3C-A92A-FD4BB4C8D963}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8C73F18-D006-41C3-97BB-81B1F9E5B5BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8C73F18-D006-41C3-97BB-81B1F9E5B5BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8C73F18-D006-41C3-97BB-81B1F9E5B5BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8C73F18-D006-41C3-97BB-81B1F9E5B5BA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

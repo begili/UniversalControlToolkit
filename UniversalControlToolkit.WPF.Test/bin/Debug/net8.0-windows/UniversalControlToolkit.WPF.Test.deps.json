@@ -1,0 +1,80 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "UniversalControlToolkit.WPF.Test/1.0.0": {
+        "dependencies": {
+          "SharpVectors": "1.8.3",
+          "UniversalControlToolkit.WPF": "1.0.0"
+        },
+        "runtime": {
+          "UniversalControlToolkit.WPF.Test.dll": {}
+        }
+      },
+      "SharpVectors/1.8.3": {
+        "runtime": {
+          "lib/net8.0-windows7.0/SharpVectors.Converters.Wpf.dll": {
+            "assemblyVersion": "1.8.3.0",
+            "fileVersion": "1.8.3.0"
+          },
+          "lib/net8.0-windows7.0/SharpVectors.Core.dll": {
+            "assemblyVersion": "1.8.3.0",
+            "fileVersion": "1.8.3.0"
+          },
+          "lib/net8.0-windows7.0/SharpVectors.Css.dll": {
+            "assemblyVersion": "1.8.3.0",
+            "fileVersion": "1.8.3.0"
+          },
+          "lib/net8.0-windows7.0/SharpVectors.Dom.dll": {
+            "assemblyVersion": "1.8.3.0",
+            "fileVersion": "1.8.3.0"
+          },
+          "lib/net8.0-windows7.0/SharpVectors.Model.dll": {
+            "assemblyVersion": "1.8.3.0",
+            "fileVersion": "1.8.3.0"
+          },
+          "lib/net8.0-windows7.0/SharpVectors.Rendering.Gdi.dll": {
+            "assemblyVersion": "1.8.3.0",
+            "fileVersion": "1.8.3.0"
+          },
+          "lib/net8.0-windows7.0/SharpVectors.Rendering.Wpf.dll": {
+            "assemblyVersion": "1.8.3.0",
+            "fileVersion": "1.8.3.0"
+          },
+          "lib/net8.0-windows7.0/SharpVectors.Runtime.Wpf.dll": {
+            "assemblyVersion": "1.8.3.0",
+            "fileVersion": "1.8.3.0"
+          }
+        }
+      },
+      "UniversalControlToolkit.WPF/1.0.0": {
+        "runtime": {
+          "UniversalControlToolkit.WPF.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "UniversalControlToolkit.WPF.Test/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "SharpVectors/1.8.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-1N/9877XrRh04/bOTPc0TgPTdzEvEUhFd7ylIN/6U/0lnTIzhlwvt8J53HfBhj0tx8vA+LcLCWEZHQMSG+IXXA==",
+      "path": "sharpvectors/1.8.3",
+      "hashPath": "sharpvectors.1.8.3.nupkg.sha512"
+    },
+    "UniversalControlToolkit.WPF/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
