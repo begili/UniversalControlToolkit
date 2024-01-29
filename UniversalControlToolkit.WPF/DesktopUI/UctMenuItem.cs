@@ -26,6 +26,7 @@ public class UctMenuItem : Control
     private readonly UctMenu _childMenu;
     private readonly CtkMenuItemCollection _children;
     private readonly Border _brdHightlight;
+    private readonly ContentPresenter _cpIcon;
 
     //--------------------------
     //
@@ -67,6 +68,20 @@ public class UctMenuItem : Control
         _brdHightlight.MouseLeave += BrdHightlight_OnMouseLeave;
         _grdHost.Children.Add(_brdHightlight);
 
+        _cpIcon = new ContentPresenter();
+        _cpIcon.SetBinding(ContentPresenter.ContentTemplateProperty,
+            new Binding(nameof(AppIcon)) { Source = this });
+
+        Viewbox vb = new Viewbox()
+        {
+            VerticalAlignment = VerticalAlignment.Stretch, 
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Child = _cpIcon,
+            Margin = new Thickness(2)
+        };
+        _grdHost.Children.Add(vb);
+
+
         _children = new CtkMenuItemCollection();
         _children.CollectionChanged += Children_OnCollectionChanged;
         var cpContent = new ContentPresenter()
@@ -82,6 +97,7 @@ public class UctMenuItem : Control
         _childMenu = new UctMenu();
         _childMenu.SetBinding(UctMenu.RowHeightProperty, new Binding(nameof(RowHeight)) { Source = this });
         _childMenu.SetBinding(UctMenu.SubMenuInsetProperty, new Binding(nameof(SubMenuInset)) { Source = this });
+        _childMenu.SetBinding(UctMenu.GroupIconProperty, new Binding(nameof(GroupIcon)) { Source = this });
         _childMenu.SetBinding(UctMenu.MarginProperty,
             new Binding(nameof(SubMenuInset)) { Source = this, Converter = new DoubleToLeftMarginConverter() });
         Grid.SetColumnSpan(_childMenu, 2);
@@ -149,6 +165,26 @@ public class UctMenuItem : Control
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
     public CtkMenuItemCollection Children => _children;
 
+    public DataTemplate GroupIcon
+    {
+        get => (DataTemplate)GetValue(GroupIconProperty);
+        set => SetValue(GroupIconProperty, value);
+    }
+
+    public static readonly DependencyProperty GroupIconProperty =
+        DependencyProperty.Register(nameof(GroupIcon), typeof(DataTemplate), typeof(UctMenuItem),
+            new PropertyMetadata(null));
+
+    public DataTemplate AppIcon
+    {
+        get => (DataTemplate)GetValue(AppIconProperty);
+        set => SetValue(AppIconProperty, value);
+    }
+
+    public static readonly DependencyProperty AppIconProperty =
+        DependencyProperty.Register(nameof(AppIcon), typeof(DataTemplate), typeof(UctMenuItem),
+            new PropertyMetadata(null));
+
     //--------------------------
     //
     //      methods
@@ -211,11 +247,22 @@ public class UctMenuItem : Control
                 for (int i = 0; i < _children.Count; i++)
                 {
                     var item = _children[i];
-                    item.SetBinding(UctMenuItem.RowHeightProperty, new Binding(nameof(RowHeight)) { Source = this });
                     _childMenu.Items.Add(item);
                 }
 
                 break;
+        }
+
+        BindingOperations.ClearBinding(_cpIcon, ContentPresenter.ContentTemplateProperty);
+        if (_children.Count > 0)
+        {
+            _cpIcon.SetBinding(ContentPresenter.ContentTemplateProperty,
+                new Binding(nameof(GroupIcon)) { Source = this });
+        }
+        else
+        {
+            _cpIcon.SetBinding(ContentPresenter.ContentTemplateProperty,
+                new Binding(nameof(AppIcon)) { Source = this });
         }
     }
 
@@ -279,10 +326,10 @@ public class UctMenuItem : Control
 
 public class ModuleDefinitionClickedEventArgs : EventArgs
 {
-    public ModuleDefinitionClickedEventArgs(UctModuleDefinition uctModuleDefinition)
+    public ModuleDefinitionClickedEventArgs(UctModuleDefinition moduleDefinition)
     {
-        UctModuleDefinition = uctModuleDefinition;
+        ModuleDefinition = moduleDefinition;
     }
 
-    public UctModuleDefinition UctModuleDefinition { get; set; }
+    public UctModuleDefinition ModuleDefinition { get; set; }
 }

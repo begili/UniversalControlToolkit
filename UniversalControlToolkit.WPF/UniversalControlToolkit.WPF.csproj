@@ -9,6 +9,14 @@
 
     <ItemGroup>
       <Folder Include="DesktopUI\Utils\" />
+      <Folder Include="Themes\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Page Remove="Resources\DarkTheme.xaml" />
+      <Resource Include="Resources\DarkTheme.xaml" />
+      <Page Remove="Resources\LightTheme.xaml" />
+      <Resource Include="Resources\LightTheme.xaml" />
     </ItemGroup>
 
 </Project>

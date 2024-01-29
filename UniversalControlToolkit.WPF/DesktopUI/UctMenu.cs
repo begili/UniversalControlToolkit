@@ -66,6 +66,16 @@ public class UctMenu : Control
     public static readonly DependencyProperty SubMenuInsetProperty =
         DependencyProperty.Register(nameof(SubMenuInset), typeof(double), typeof(UctMenu), new PropertyMetadata(16.0));
 
+    public DataTemplate GroupIcon
+    {
+        get => (DataTemplate)GetValue(GroupIconProperty);
+        set => SetValue(GroupIconProperty, value);
+    }
+
+    public static readonly DependencyProperty GroupIconProperty =
+        DependencyProperty.Register(nameof(GroupIcon), typeof(DataTemplate), typeof(UctMenu),
+            new PropertyMetadata(null));
+
     //--------------------------
     //
     //      methods
@@ -77,6 +87,22 @@ public class UctMenu : Control
     private void ItemModuleDefinitionClicked(object? sender, ModuleDefinitionClickedEventArgs e)
     {
         ModuleDefinitionClicked?.Invoke(sender, e);
+    }
+
+    private UctMenuItem SetBindings(UctMenuItem menuItem)
+    {
+        menuItem.SetBinding(UctMenuItem.RowHeightProperty, new Binding(nameof(RowHeight)) { Source = this });
+        menuItem.SetBinding(UctMenuItem.SubMenuInsetProperty, new Binding(nameof(SubMenuInset)) { Source = this });
+        menuItem.SetBinding(UctMenuItem.GroupIconProperty, new Binding(nameof(GroupIcon)) { Source = this });
+        return menuItem;
+    }
+
+    private UctMenuItem ClearBindings(UctMenuItem menuItem)
+    {
+        BindingOperations.ClearBinding(menuItem, UctMenuItem.RowHeightProperty);
+        BindingOperations.ClearBinding(menuItem, UctMenuItem.SubMenuInsetProperty);
+        BindingOperations.ClearBinding(menuItem, UctMenuItem.GroupIconProperty);
+        return menuItem;
     }
 
     //--------------------------
@@ -97,7 +123,7 @@ public class UctMenu : Control
                         addedItems.Add(Items.IndexOf(item), item);
                 foreach (var item in addedItems.Keys.OrderBy(it => it))
                 {
-                    _itemHost.Children.Insert(item, addedItems[item]);
+                    _itemHost.Children.Insert(item, SetBindings(addedItems[item]));
                     addedItems[item].ModuleDefinitionClicked += ItemModuleDefinitionClicked;
                 }
 
@@ -106,7 +132,7 @@ public class UctMenu : Control
                 if (e.OldItems != null)
                     foreach (UctMenuItem item in e.OldItems)
                     {
-                        _itemHost.Children.Remove(item);
+                        _itemHost.Children.Remove(ClearBindings(item));
                         item.ModuleDefinitionClicked -= ItemModuleDefinitionClicked;
                     }
 
@@ -115,7 +141,7 @@ public class UctMenu : Control
                 if (e.OldItems != null)
                     foreach (UctMenuItem item in e.OldItems)
                     {
-                        _itemHost.Children.Remove(item);
+                        _itemHost.Children.Remove(ClearBindings(item));
                         item.ModuleDefinitionClicked -= ItemModuleDefinitionClicked;
                     }
 
@@ -125,7 +151,7 @@ public class UctMenu : Control
                         addedItems.Add(Items.IndexOf(item), item);
                 foreach (var item in addedItems.Keys.OrderBy(it => it))
                 {
-                    _itemHost.Children.Insert(item, addedItems[item]);
+                    _itemHost.Children.Insert(item, SetBindings(addedItems[item]));
                     addedItems[item].ModuleDefinitionClicked += ItemModuleDefinitionClicked;
                 }
 
@@ -134,12 +160,11 @@ public class UctMenu : Control
             case NotifyCollectionChangedAction.Reset:
                 foreach (UIElement item in _itemHost.Children)
                     if (item is UctMenuItem cmi)
-                        cmi.ModuleDefinitionClicked -= ItemModuleDefinitionClicked;
+                        ClearBindings(cmi).ModuleDefinitionClicked -= ItemModuleDefinitionClicked;
                 _itemHost.Children.Clear();
                 for (int i = 0; i < _items.Count; i++)
                 {
-                    var item = _items[i];
-                    item.SetBinding(UctMenuItem.RowHeightProperty, new Binding(nameof(RowHeight)) { Source = this });
+                    var item = SetBindings(_items[i]);
                     _itemHost.Children.Add(item);
                     item.ModuleDefinitionClicked += ItemModuleDefinitionClicked;
                 }

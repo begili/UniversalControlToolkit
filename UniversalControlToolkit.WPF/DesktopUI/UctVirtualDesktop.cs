@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using UniversalControlToolkit.WPF.DesktopUI.Utils;
 using Brushes = System.Windows.Media.Brushes;
 
 namespace UniversalControlToolkit.WPF.DesktopUI;
@@ -23,6 +24,9 @@ public class UctVirtualDesktop : Control
     private readonly Border _brdModal, _brdTaskbar, _brdTaskbarMenu, _brdContent, _brdStartButton;
     private readonly UctMenu _taskbarMenu;
 
+    private readonly IList<RunningAppInfo> _runningAppInfos;
+    private RunningAppInfo _currentApp;
+
     //--------------------------
     //
     //      constructor
@@ -31,6 +35,8 @@ public class UctVirtualDesktop : Control
 
     public UctVirtualDesktop()
     {
+        _runningAppInfos = new List<RunningAppInfo>();
+
         ColumnDefinition cDefRight;
         ColumnDefinition cDefLeft;
         RowDefinition rDefBottom;
@@ -100,7 +106,7 @@ public class UctVirtualDesktop : Control
 
         _gridTaskbar = new Grid();
 
-        _applicationPanel = new StackPanel() { Background = Brushes.DarkGray };
+        _applicationPanel = new StackPanel();
         Grid.SetColumn(_applicationPanel, 1);
         Grid.SetRow(_applicationPanel, 1);
         _gridTaskbar.Children.Add(_applicationPanel);
@@ -115,7 +121,7 @@ public class UctVirtualDesktop : Control
             HorizontalAlignment = HorizontalAlignment.Stretch
         };
 
-        _brdStartButton = new Border() { Background = Brushes.Transparent, Child = viewBox };
+        _brdStartButton = new Border() { Background = Brushes.Transparent, Child = viewBox, Margin = new Thickness(2) };
         _brdStartButton.SetBinding(Border.HeightProperty, new Binding(nameof(TaskbarSize)) { Source = this });
         _brdStartButton.SetBinding(Border.WidthProperty, new Binding(nameof(TaskbarSize)) { Source = this });
         _brdStartButton.MouseLeftButtonDown += CpStartButton_OnMouseLeftButtonDown;
@@ -123,8 +129,9 @@ public class UctVirtualDesktop : Control
 
         _brdTaskbar = new Border()
         {
-            Child = _gridTaskbar, Background = Brushes.DimGray
+            Child = _gridTaskbar
         };
+        _brdTaskbar.SetResourceReference(Border.BackgroundProperty, "UctTaskbarBackgroundColor");
 
         _gridHost.Children.Add(_brdTaskbar);
 
@@ -147,6 +154,7 @@ public class UctVirtualDesktop : Control
             HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             Content = _taskbarMenu
         };
+        _taskbarMenu.SetBinding(UctMenu.GroupIconProperty, new Binding(nameof(GroupIcon)) { Source = this });
 
         _brdTaskbarMenu = new Border()
         {
@@ -231,6 +239,26 @@ public class UctVirtualDesktop : Control
         DependencyProperty.Register(nameof(StartButtonContent), typeof(object), typeof(UctVirtualDesktop),
             new PropertyMetadata("Start"));
 
+    public DataTemplate DefaultAppIcon
+    {
+        get => (DataTemplate)GetValue(DefaultAppIconProperty);
+        set => SetValue(DefaultAppIconProperty, value);
+    }
+
+    public static readonly DependencyProperty DefaultAppIconProperty =
+        DependencyProperty.Register(nameof(DefaultAppIcon), typeof(DataTemplate), typeof(UctVirtualDesktop),
+            new PropertyMetadata(null));
+
+    public DataTemplate GroupIcon
+    {
+        get => (DataTemplate)GetValue(GroupIconProperty);
+        set => SetValue(GroupIconProperty, value);
+    }
+
+    public static readonly DependencyProperty GroupIconProperty =
+        DependencyProperty.Register(nameof(GroupIcon), typeof(DataTemplate), typeof(UctVirtualDesktop),
+            new PropertyMetadata(null));
+
     //--------------------------
     //
     //      methods
@@ -297,6 +325,23 @@ public class UctVirtualDesktop : Control
         }
     }
 
+    private void SetCurrentApplication(RunningAppInfo appInfo)
+    {
+        if (!_runningAppInfos.Contains(appInfo))
+        {
+            _runningAppInfos.Add(appInfo);
+            _applicationPanel.Children.Add(appInfo.AppButton);
+        }
+
+        foreach (var item in _runningAppInfos)
+        {
+            item.AppButton.IsHighlighted = item == appInfo;
+        }
+
+        _currentApp = appInfo;
+        _brdContent.Child = appInfo.InstancedUI;
+    }
+
     //--------------------------
     //
     //      events
@@ -316,7 +361,37 @@ public class UctVirtualDesktop : Control
 
     private void TaskbarMenu_OnModuleDefinitionClicked(object? sender, ModuleDefinitionClickedEventArgs e)
     {
-        _brdContent.Child = e.UctModuleDefinition.GetModuleUI();
+        _brdModal.Visibility = _brdTaskbarMenu.Visibility = Visibility.Collapsed;
+        if (e.ModuleDefinition.MaxInstances > 0 &&
+            _runningAppInfos.Count(it => it.ModuleDefinition == e.ModuleDefinition) >= e.ModuleDefinition.MaxInstances)
+        {
+            var app = _runningAppInfos.FirstOrDefault(it => it.ModuleDefinition == e.ModuleDefinition);
+            if (app != null)
+                SetCurrentApplication(app);
+            return;
+        }
+
+        var appButton = new UctApplicationButton()
+        {
+            ContentTemplate = e.ModuleDefinition.Icon ?? DefaultAppIcon, ToolTip = e.ModuleDefinition.AppName
+        };
+        appButton.SetBinding(UctApplicationButton.HeightProperty, new Binding(nameof(TaskbarSize)) { Source = this });
+        appButton.SetBinding(UctApplicationButton.WidthProperty, new Binding(nameof(TaskbarSize)) { Source = this });
+        appButton.MouseLeftButtonDown += AppButton_OnMouseLeftButtonDown;
+        RunningAppInfo newApp = new RunningAppInfo()
+        {
+            ModuleDefinition = e.ModuleDefinition,
+            InstancedUI = e.ModuleDefinition.GetModuleUI(),
+            AppButton = appButton
+        };
+        SetCurrentApplication(newApp);
+    }
+
+    private void AppButton_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        var app = _runningAppInfos.FirstOrDefault(it => it.AppButton == sender);
+        if (app != null)
+            SetCurrentApplication(app);
     }
 
     //--------------------------
@@ -342,6 +417,15 @@ public class UctVirtualDesktop : Control
         {
             throw new NotSupportedException();
         }
+    }
+
+    private class RunningAppInfo
+    {
+        public UctModuleDefinition ModuleDefinition { get; set; }
+
+        public UIElement InstancedUI { get; set; }
+
+        public UctApplicationButton AppButton { get; set; }
     }
 }
 
