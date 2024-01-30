@@ -147,6 +147,8 @@ public class UctVirtualDesktop : Control
         _gridHost.Children.Add(_brdModal);
 
         _taskbarMenu = new UctMenu();
+        _taskbarMenu.SetResourceReference(UctMenu.ForegroundProperty, "UctTaskmenuForegroundColor");
+        _taskbarMenu.SetResourceReference(UctMenu.HighlightBackgroundProperty, "UctTaskmenuHighlightedColor");
         _taskbarMenu.ModuleDefinitionClicked += TaskbarMenu_OnModuleDefinitionClicked;
         ScrollViewer scrv = new ScrollViewer()
         {
@@ -159,9 +161,9 @@ public class UctVirtualDesktop : Control
         _brdTaskbarMenu = new Border()
         {
             Visibility = Visibility.Collapsed,
-            Background = Brushes.Gray,
             Child = scrv
         };
+        _brdTaskbarMenu.SetResourceReference(Border.BackgroundProperty, "UctTaskmenuBackgroundColor");
         Grid.SetRow(_brdTaskbarMenu, 1);
         Grid.SetColumn(_brdTaskbarMenu, 1);
         _brdTaskbarMenu.SetBinding(UctMenu.WidthProperty, new Binding(nameof(TaskbarMenuWidth)) { Source = this });
@@ -335,7 +337,7 @@ public class UctVirtualDesktop : Control
 
         foreach (var item in _runningAppInfos)
         {
-            item.AppButton.IsHighlighted = item == appInfo;
+            item.AppButton.IsSelected = item == appInfo;
         }
 
         _currentApp = appInfo;
@@ -377,6 +379,8 @@ public class UctVirtualDesktop : Control
         };
         appButton.SetBinding(UctApplicationButton.HeightProperty, new Binding(nameof(TaskbarSize)) { Source = this });
         appButton.SetBinding(UctApplicationButton.WidthProperty, new Binding(nameof(TaskbarSize)) { Source = this });
+        appButton.SetResourceReference(UctApplicationButton.HighlightBackgroundProperty, "UctTaskbarHighlightedColor");
+        appButton.SetResourceReference(UctApplicationButton.SelectedBackgroundProperty, "UctTaskbarSelectedColor");
         appButton.MouseLeftButtonDown += AppButton_OnMouseLeftButtonDown;
         RunningAppInfo newApp = new RunningAppInfo()
         {

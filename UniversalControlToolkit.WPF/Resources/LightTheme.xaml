@@ -1,5 +1,11 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <SolidColorBrush x:Key="UctTaskbarBackgroundColor" Color="#FFFFFFFF"></SolidColorBrush>
-    <SolidColorBrush x:Key="UctTaskbarForegroundColor" Color="#FF1A1A1A"></SolidColorBrush>
+    <SolidColorBrush x:Key="UctTaskbarBackgroundColor" Color="#FFBFBFBF"></SolidColorBrush>
+    <SolidColorBrush x:Key="UctTaskbarForegroundColor" Color="#FF1E1E1E"></SolidColorBrush>
+    <SolidColorBrush x:Key="UctTaskmenuBackgroundColor" Color="#FFDFDFDF"></SolidColorBrush>
+    <SolidColorBrush x:Key="UctTaskmenuForegroundColor" Color="#FF1E1E1E"></SolidColorBrush>
+    <SolidColorBrush x:Key="UctTaskmenuHighlightedColor" Color="#20FFFFFF"></SolidColorBrush>
+    <SolidColorBrush x:Key="UctTaskbarHighlightedColor" Color="#20FFFFFF"></SolidColorBrush>
+    <SolidColorBrush x:Key="UctTaskbarSelectedColor" Color="#80FFFFFF"></SolidColorBrush>
+    
 </ResourceDictionary>

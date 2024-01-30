@@ -8,13 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Folder Include="DesktopUI\Utils\"/>
-        <Folder Include="Themes\"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Remove="svg\**"/>
-        <Resource Include="svg\**"/>
+      <Folder Include="DesktopUI\Utils\" />
+      <Folder Include="Themes\" />
     </ItemGroup>
 
 </Project>

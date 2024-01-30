@@ -76,6 +76,16 @@ public class UctMenu : Control
         DependencyProperty.Register(nameof(GroupIcon), typeof(DataTemplate), typeof(UctMenu),
             new PropertyMetadata(null));
 
+    public Brush HighlightBackground
+    {
+        get => (Brush)GetValue(HighlightBackgroundProperty);
+        set => SetValue(HighlightBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty HighlightBackgroundProperty =
+        DependencyProperty.Register(nameof(HighlightBackground), typeof(Brush), typeof(UctMenu),
+            new PropertyMetadata(Brushes.SkyBlue));
+
     //--------------------------
     //
     //      methods
@@ -94,6 +104,8 @@ public class UctMenu : Control
         menuItem.SetBinding(UctMenuItem.RowHeightProperty, new Binding(nameof(RowHeight)) { Source = this });
         menuItem.SetBinding(UctMenuItem.SubMenuInsetProperty, new Binding(nameof(SubMenuInset)) { Source = this });
         menuItem.SetBinding(UctMenuItem.GroupIconProperty, new Binding(nameof(GroupIcon)) { Source = this });
+        menuItem.SetBinding(UctMenuItem.HighlightBackgroundProperty,
+            new Binding(nameof(HighlightBackground)) { Source = this });
         return menuItem;
     }
 
@@ -102,6 +114,7 @@ public class UctMenu : Control
         BindingOperations.ClearBinding(menuItem, UctMenuItem.RowHeightProperty);
         BindingOperations.ClearBinding(menuItem, UctMenuItem.SubMenuInsetProperty);
         BindingOperations.ClearBinding(menuItem, UctMenuItem.GroupIconProperty);
+        BindingOperations.ClearBinding(menuItem, UctMenuItem.HighlightBackgroundProperty);
         return menuItem;
     }
 

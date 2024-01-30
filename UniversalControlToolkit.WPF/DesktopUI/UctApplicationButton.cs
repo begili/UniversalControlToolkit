@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace UniversalControlToolkit.WPF.DesktopUI;
@@ -42,7 +43,17 @@ public class UctApplicationButton : Control
         };
         ToolTipService.SetInitialShowDelay(_brdHost, 0);
         _brdHost.SetBinding(Border.BackgroundProperty,
-            new Binding(nameof(IsHighlighted)) { Source = this, Converter = new IsHighlightedToBackgroundConverter() });
+            new MultiBinding()
+            {
+                Converter = new IsSelectedHighlightedToBackgroundConverter(),
+                Bindings =
+                {
+                    new Binding(nameof(IsSelected)) { Source = this },
+                    new Binding(nameof(IsMouseOver)) { Source = this },
+                    new Binding(nameof(SelectedBackground)) { Source = this },
+                    new Binding(nameof(HighlightBackground)) { Source = this }
+                }
+            });
         _brdHost.SetBinding(Border.ToolTipProperty, new Binding(nameof(ToolTip)) { Source = this });
 
         AddVisualChild(_brdHost);
@@ -76,15 +87,35 @@ public class UctApplicationButton : Control
         DependencyProperty.Register(nameof(ContentTemplate), typeof(DataTemplate), typeof(UctApplicationButton),
             new PropertyMetadata(null));
 
-    public bool IsHighlighted
+    public bool IsSelected
     {
-        get => (bool)GetValue(IsHighlightedProperty);
-        set => SetValue(IsHighlightedProperty, value);
+        get => (bool)GetValue(IsSelectedProperty);
+        set => SetValue(IsSelectedProperty, value);
     }
 
-    public static readonly DependencyProperty IsHighlightedProperty =
-        DependencyProperty.Register(nameof(IsHighlighted), typeof(bool), typeof(UctApplicationButton),
+    public static readonly DependencyProperty IsSelectedProperty =
+        DependencyProperty.Register(nameof(IsSelected), typeof(bool), typeof(UctApplicationButton),
             new PropertyMetadata(false));
+
+    public Brush HighlightBackground
+    {
+        get => (Brush)GetValue(HighlightBackgroundProperty);
+        set => SetValue(HighlightBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty HighlightBackgroundProperty =
+        DependencyProperty.Register(nameof(HighlightBackground), typeof(Brush), typeof(UctApplicationButton),
+            new PropertyMetadata(Brushes.LightBlue));
+
+    public Brush SelectedBackground
+    {
+        get => (Brush)GetValue(SelectedBackgroundProperty);
+        set => SetValue(SelectedBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty SelectedBackgroundProperty =
+        DependencyProperty.Register(nameof(SelectedBackground), typeof(Brush), typeof(UctApplicationButton),
+            new PropertyMetadata(Brushes.SkyBlue));
 
     //--------------------------
     //
@@ -96,20 +127,31 @@ public class UctApplicationButton : Control
 
     //--------------------------
     //
+    //      events
+    //
+    //--------------------------
+
+    //--------------------------
+    //
     //      classes
     //
     //--------------------------
 
-    private class IsHighlightedToBackgroundConverter : IValueConverter
+    private class IsSelectedHighlightedToBackgroundConverter : IMultiValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is bool bVal && bVal)
-                return Brushes.SkyBlue;
+            if (values.Length != 4 || !(values[0] is bool isSelected) || !(values[1] is bool isMouseOver) ||
+                !(values[2] is Brush brushSelected) || !(values[3] is Brush brushHighlighted))
+                return Brushes.Transparent;
+            if (isSelected)
+                return brushSelected;
+            if (isMouseOver)
+                return brushHighlighted;
             return Brushes.Transparent;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object[] ConvertBack(object values, Type[] targetTypes, object parameter, CultureInfo culture)
         {
             throw new NotSupportedException();
         }

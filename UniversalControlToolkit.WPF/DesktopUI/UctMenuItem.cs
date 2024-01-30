@@ -74,7 +74,7 @@ public class UctMenuItem : Control
 
         Viewbox vb = new Viewbox()
         {
-            VerticalAlignment = VerticalAlignment.Stretch, 
+            VerticalAlignment = VerticalAlignment.Stretch,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             Child = _cpIcon,
             Margin = new Thickness(2)
@@ -100,6 +100,8 @@ public class UctMenuItem : Control
         _childMenu.SetBinding(UctMenu.GroupIconProperty, new Binding(nameof(GroupIcon)) { Source = this });
         _childMenu.SetBinding(UctMenu.MarginProperty,
             new Binding(nameof(SubMenuInset)) { Source = this, Converter = new DoubleToLeftMarginConverter() });
+        _childMenu.SetBinding(UctMenu.HighlightBackgroundProperty,
+            new Binding(nameof(HighlightBackground)) { Source = this });
         Grid.SetColumnSpan(_childMenu, 2);
         Grid.SetRow(_childMenu, 1);
         _childMenu.ModuleDefinitionClicked += ChildMenu_OnModuleDefinitionClicked;
@@ -184,6 +186,16 @@ public class UctMenuItem : Control
     public static readonly DependencyProperty AppIconProperty =
         DependencyProperty.Register(nameof(AppIcon), typeof(DataTemplate), typeof(UctMenuItem),
             new PropertyMetadata(null));
+
+    public Brush HighlightBackground
+    {
+        get => (Brush)GetValue(HighlightBackgroundProperty);
+        set => SetValue(HighlightBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty HighlightBackgroundProperty =
+        DependencyProperty.Register(nameof(HighlightBackground), typeof(Brush), typeof(UctMenuItem),
+            new PropertyMetadata(Brushes.SkyBlue));
 
     //--------------------------
     //
@@ -274,7 +286,7 @@ public class UctMenuItem : Control
 
     private void BrdHightlight_OnMouseEnter(object sender, MouseEventArgs e)
     {
-        _brdHightlight.Background = Brushes.SkyBlue;
+        _brdHightlight.Background = HighlightBackground;
     }
 
     private void BrdHightlight_OnMouseLeave(object sender, MouseEventArgs e)
