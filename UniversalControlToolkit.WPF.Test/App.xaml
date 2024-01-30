@@ -4,6 +4,6 @@
              xmlns:local="clr-namespace:UniversalControlToolkit.WPF.Test"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <FontFamily x:Key="IcoFont">pack://application:,,,/Fonts/icofont/fonts/#icofont</FontFamily>
     </Application.Resources>
 </Application>

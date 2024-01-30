@@ -8,5 +8,13 @@
     <SolidColorBrush x:Key="UctTaskbarHighlightedColor" Color="#20FFFFFF"></SolidColorBrush>
     <SolidColorBrush x:Key="UctTaskbarSelectedColor" Color="#80FFFFFF"></SolidColorBrush>
     <SolidColorBrush x:Key="UctDefaultBackgroundColor" Color="#FF232323"></SolidColorBrush>
+    <SolidColorBrush x:Key="UctCommonForegroundColor" Color="#FFD0D0D0"></SolidColorBrush>
+    <SolidColorBrush x:Key="UctWindowBackgroundColor" Color="#FF484848"></SolidColorBrush>
+
+    <Style TargetType="ToolTip">
+        <Setter Property="Background" Value="{DynamicResource UctTaskmenuBackgroundColor}"></Setter>
+        <Setter Property="Foreground" Value="{DynamicResource UctTaskmenuForegroundColor}"></Setter>
+        <Setter Property="BorderBrush" Value="{DynamicResource UctTaskbarBackgroundColor}"></Setter>
+    </Style>
 
 </ResourceDictionary>

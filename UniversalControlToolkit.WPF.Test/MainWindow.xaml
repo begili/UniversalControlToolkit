@@ -7,16 +7,111 @@
         xmlns:desktopUi="clr-namespace:UniversalControlToolkit.WPF.DesktopUI;assembly=UniversalControlToolkit.WPF"
         xmlns:svg="https://github.com/dotnetprojects/SVGImage"
         xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
+        xmlns:utils="clr-namespace:UniversalControlToolkit.WPF.DesktopUI.Utils;assembly=UniversalControlToolkit.WPF"
         mc:Ignorable="d"
         Title="MainWindow" Height="850" Width="1200">
-    <Grid>
-        <desktopUi:UctVirtualDesktop>
-            <desktopUi:UctVirtualDesktop.StartButtonContent>
-                <svgc:SvgViewbox Height="32" Width="32" Margin="5" Source="pack://application:,,,/UniversalControlToolkit.WPF.Test;component/svg/menu.svg" />
-            </desktopUi:UctVirtualDesktop.StartButtonContent>
-            <desktopUi:UctVirtualDesktop.MenuItems>
-                <desktopUi:UctMenuItem Content="Application 1"></desktopUi:UctMenuItem>
-            </desktopUi:UctVirtualDesktop.MenuItems>
-        </desktopUi:UctVirtualDesktop>
-    </Grid>
+    <Window.Resources>
+        <ResourceDictionary>
+            <DataTemplate x:Key="appIcon1">
+                <TextBlock Text="1"></TextBlock>
+            </DataTemplate>
+            <DataTemplate x:Key="appIcon2">
+                <TextBlock Text="2"></TextBlock>
+            </DataTemplate>
+            <DataTemplate x:Key="appIconGeneric">
+                <TextBlock Foreground="{DynamicResource UctTaskbarForegroundColor}"
+                           FontFamily="{StaticResource IcoFont}"
+                           Text="&#xef52;" Margin="2" VerticalAlignment="Center">
+                </TextBlock>
+            </DataTemplate>
+            <DataTemplate x:Key="folderIcon">
+                <TextBlock Foreground="{DynamicResource UctTaskbarForegroundColor}"
+                           FontFamily="{StaticResource IcoFont}"
+                           Text="&#xef36;" Margin="2" VerticalAlignment="Center">
+                </TextBlock>
+            </DataTemplate>
+        </ResourceDictionary>
+    </Window.Resources>
+    <desktopUi:UctVirtualDesktop DefaultAppIcon="{StaticResource appIconGeneric}"
+                                 GroupIcon="{StaticResource folderIcon}"
+                                 CanUserChangeBackground="True"
+                                 DesktopBackground="{DynamicResource UctDefaultBackgroundColor}">
+        <desktopUi:UctVirtualDesktop.StartButtonContent>
+            <TextBlock Foreground="{DynamicResource UctTaskbarForegroundColor}" FontFamily="{StaticResource IcoFont}"
+                       Text="&#xefa2;">
+            </TextBlock>
+        </desktopUi:UctVirtualDesktop.StartButtonContent>
+        <desktopUi:UctVirtualDesktop.MenuItems>
+            <desktopUi:UctMenuItem Content="App1" AppIcon="{StaticResource appIcon1}">
+                <desktopUi:UctMenuItem.ModuleDefinition>
+                    <utils:UctModuleDefinition ModuleCreateRequest="App1_OnModuleCreateRequest"
+                                               Icon="{StaticResource appIcon1}" AppName="App1"
+                                               MaxInstances="1" />
+                </desktopUi:UctMenuItem.ModuleDefinition>
+            </desktopUi:UctMenuItem>
+            <desktopUi:UctMenuItem Content="App2" AppIcon="{StaticResource appIcon2}">
+                <desktopUi:UctMenuItem.ModuleDefinition>
+                    <utils:UctModuleDefinition ModuleCreateRequest="App2_OnModuleCreateRequest"
+                                               Icon="{StaticResource appIcon2}" AppName="App2"
+                                               MaxInstances="1" />
+                </desktopUi:UctMenuItem.ModuleDefinition>
+            </desktopUi:UctMenuItem>
+        </desktopUi:UctVirtualDesktop.MenuItems>
+        <desktopUi:UctVirtualDesktop.MenuFooterContent>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Height="32">
+                <Viewbox Height="32" Width="32" ToolTip="Hell/Dunkel wechseln">
+                    <desktopUi:UctImageButton HighlightBackground="{DynamicResource UctTaskmenuHighlightedColor}"
+                                              MouseLeftButtonDown="BtnSelectTheme_OnMouseLeftButtonDown">
+                        <desktopUi:UctImageButton.Content>
+                            <TextBlock Foreground="{DynamicResource UctTaskbarForegroundColor}"
+                                       FontFamily="{StaticResource IcoFont}"
+                                       Text="&#xec88;" Margin="5" VerticalAlignment="Center">
+                            </TextBlock>
+                        </desktopUi:UctImageButton.Content>
+                    </desktopUi:UctImageButton>
+                </Viewbox>
+                <Viewbox Height="32" Width="32" ToolTip="Anwendung beenden">
+                    <desktopUi:UctImageButton HighlightBackground="{DynamicResource UctTaskmenuHighlightedColor}"
+                                              MouseLeftButtonDown="BtnShutdown_OnMouseLeftButtonDown">
+                        <desktopUi:UctImageButton.Content>
+                            <TextBlock Foreground="{DynamicResource UctTaskbarForegroundColor}"
+                                       FontFamily="{StaticResource IcoFont}"
+                                       Text="&#xec76;" Margin="5" VerticalAlignment="Center">
+                            </TextBlock>
+                        </desktopUi:UctImageButton.Content>
+                    </desktopUi:UctImageButton>
+                </Viewbox>
+            </StackPanel>
+        </desktopUi:UctVirtualDesktop.MenuFooterContent>
+        <desktopUi:UctVirtualDesktop.CloseButtonTemplate>
+            <DataTemplate>
+                <Viewbox Height="32" Width="32">
+                    <TextBlock Foreground="{DynamicResource UctTaskbarForegroundColor}"
+                               FontFamily="{StaticResource IcoFont}"
+                               Text="&#xeee4;" Margin="2" VerticalAlignment="Center">
+                    </TextBlock>
+                </Viewbox>
+            </DataTemplate>
+        </desktopUi:UctVirtualDesktop.CloseButtonTemplate>
+        <desktopUi:UctVirtualDesktop.MinimizedButtonTemplate>
+            <DataTemplate>
+                <Viewbox Height="32" Width="32">
+                    <TextBlock Foreground="{DynamicResource UctTaskbarForegroundColor}"
+                               FontFamily="{StaticResource IcoFont}"
+                               Text="&#xef9a;" Margin="2" VerticalAlignment="Center">
+                    </TextBlock>
+                </Viewbox>
+            </DataTemplate>
+        </desktopUi:UctVirtualDesktop.MinimizedButtonTemplate>
+        <desktopUi:UctVirtualDesktop.MaximizedButtonTemplate>
+            <DataTemplate>
+                <Viewbox Height="32" Width="32">
+                    <TextBlock Foreground="{DynamicResource UctTaskbarForegroundColor}"
+                               FontFamily="{StaticResource IcoFont}"
+                               Text="&#xea7d;" Margin="2" VerticalAlignment="Center">
+                    </TextBlock>
+                </Viewbox>
+            </DataTemplate>
+        </desktopUi:UctVirtualDesktop.MaximizedButtonTemplate>
+    </desktopUi:UctVirtualDesktop>
 </Window>

@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using UniversalControlToolkit.WPF.DesktopUI.Utils;
 
 namespace UniversalControlToolkit.WPF.Test;
 
@@ -16,9 +17,26 @@ namespace UniversalControlToolkit.WPF.Test;
 /// </summary>
 public partial class MainWindow : Window
 {
-
     public MainWindow()
     {
         InitializeComponent();
+    }
+
+    private void App1_OnModuleCreateRequest(object? sender, UctModuleCreateEventArgs e)
+    {
+    }
+
+    private void App2_OnModuleCreateRequest(object? sender, UctModuleCreateEventArgs e)
+    {
+    }
+
+    private void BtnSelectTheme_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        (App.Current as App).SetTheme(!(App.Current as App).IsDarkModeActive);
+    }
+
+    private void BtnShutdown_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        App.Current.Shutdown(0);
     }
 }

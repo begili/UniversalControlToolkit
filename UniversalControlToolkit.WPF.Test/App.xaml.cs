@@ -10,9 +10,17 @@ namespace UniversalControlToolkit.WPF.Test;
 /// </summary>
 public partial class App : Application
 {
+    public bool IsDarkModeActive { get; private set; }
+    
     protected override void OnStartup(StartupEventArgs e)
     {
-        ThemeController.SetTheme(true);
+        SetTheme(true);
         base.OnStartup(e);
+    }
+
+    public void SetTheme(bool darkMode)
+    {
+        ThemeController.SetTheme(darkMode);
+        IsDarkModeActive = darkMode;
     }
 }

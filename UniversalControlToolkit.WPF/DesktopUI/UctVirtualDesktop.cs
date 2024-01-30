@@ -6,6 +6,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
+using Microsoft.Win32;
 using UniversalControlToolkit.WPF.DesktopUI.Utils;
 using Brushes = System.Windows.Media.Brushes;
 
@@ -19,15 +20,16 @@ public class UctVirtualDesktop : Control
     //
     //--------------------------
 
-    private readonly Grid _gridHost, _gridTaskbar, _gridTaskbarMenu;
+    private readonly Grid _gridHost, _gridTaskbar, _gridTaskbarMenu, _gridContent;
     private readonly ContentPresenter _cpStartButton;
     private readonly StackPanel _applicationPanel;
     private readonly Border _brdModal, _brdTaskbar, _brdTaskbarMenu, _brdContent, _brdStartButton;
     private readonly UctMenu _taskbarMenu;
     private readonly DropShadowEffect _dseTaskbarMenu;
+    private readonly UctVirtualDesktopPanel _desktopPanel;
+    private readonly ContextMenu _ctxDesktopPanel;
 
     private readonly IList<RunningAppInfo> _runningAppInfos;
-    private RunningAppInfo _currentApp;
 
     //--------------------------
     //
@@ -101,7 +103,35 @@ public class UctVirtualDesktop : Control
             ConverterParameter = (int)TaskbarPlacement.Right
         });
 
-        _brdContent = new Border();
+        MenuItem mnuBackground;
+        _ctxDesktopPanel = new ContextMenu()
+        {
+            Items =
+            {
+                (mnuBackground = new MenuItem() { Header = "Hintergrund ändern" })
+            }
+        };
+        mnuBackground.Click += MnuBackground_OnClick;
+
+        _desktopPanel = new UctVirtualDesktopPanel()
+        {
+            VerticalAlignment = VerticalAlignment.Stretch,
+            HorizontalAlignment = HorizontalAlignment.Stretch
+        };
+        if (CanUserChangeBackground)
+            _desktopPanel.ContextMenu = _ctxDesktopPanel;
+        _desktopPanel.SetBinding(UctVirtualDesktopPanel.BackgroundProperty,
+            new Binding(nameof(DesktopBackground)) { Source = this });
+        _desktopPanel.SetBinding(UctVirtualDesktopPanel.BackgroundImageProperty,
+            new Binding(nameof(DesktopBackgroundImage)) { Source = this });
+
+        _gridContent = new Grid();
+        _gridContent.Children.Add(_desktopPanel);
+
+        _brdContent = new Border()
+        {
+            Child = _gridContent
+        };
         Grid.SetRow(_brdContent, 1);
         Grid.SetColumn(_brdContent, 1);
         _gridHost.Children.Add(_brdContent);
@@ -178,7 +208,11 @@ public class UctVirtualDesktop : Control
         {
             Visibility = Visibility.Collapsed,
             Child = _gridTaskbarMenu,
-            Effect = (_dseTaskbarMenu = new DropShadowEffect() { Color = Color.FromArgb(0x40, 0x40, 0x40, 0x40) })
+            Effect = (_dseTaskbarMenu = new DropShadowEffect()
+            {
+                Color = Color.FromRgb(0x40, 0x40, 0x40),
+                Opacity = 0.4
+            })
         };
         _brdTaskbarMenu.SetResourceReference(Border.BackgroundProperty, "UctTaskmenuBackgroundColor");
         Grid.SetRow(_brdTaskbarMenu, 1);
@@ -285,7 +319,75 @@ public class UctVirtualDesktop : Control
     }
 
     public static readonly DependencyProperty MenuFooterContentProperty =
-        DependencyProperty.Register(nameof(MenuFooterContent), typeof(object), typeof(UctVirtualDesktop), new PropertyMetadata(null));
+        DependencyProperty.Register(nameof(MenuFooterContent), typeof(object), typeof(UctVirtualDesktop),
+            new PropertyMetadata(null));
+
+    public Brush DesktopBackground
+    {
+        get => (Brush)GetValue(DesktopBackgroundProperty);
+        set => SetValue(DesktopBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty DesktopBackgroundProperty =
+        DependencyProperty.Register(nameof(DesktopBackground), typeof(Brush), typeof(UctVirtualDesktop),
+            new PropertyMetadata(Brushes.Transparent));
+
+    public string DesktopBackgroundImage
+    {
+        get => (string)GetValue(DesktopBackgroundImageProperty);
+        set => SetValue(DesktopBackgroundImageProperty, value);
+    }
+
+    public static readonly DependencyProperty DesktopBackgroundImageProperty =
+        DependencyProperty.Register(nameof(DesktopBackgroundImage), typeof(string), typeof(UctVirtualDesktop),
+            new PropertyMetadata(null));
+
+    public bool CanUserChangeBackground
+    {
+        get => (bool)GetValue(CanUserChangeBackgroundProperty);
+        set => SetValue(CanUserChangeBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty CanUserChangeBackgroundProperty =
+        DependencyProperty.Register(nameof(CanUserChangeBackground), typeof(bool), typeof(UctVirtualDesktop),
+            new PropertyMetadata(true, OnCanUserChangeBackgroundChanged));
+
+    private static void OnCanUserChangeBackgroundChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+    {
+        var snd = sender as UctVirtualDesktop;
+        var newValue = (bool)e.NewValue;
+        snd._desktopPanel.ContextMenu = newValue ? snd._ctxDesktopPanel : null;
+    }
+
+    public DataTemplate CloseButtonTemplate
+    {
+        get => (DataTemplate)GetValue(CloseButtonTemplateProperty);
+        set => SetValue(CloseButtonTemplateProperty, value);
+    }
+
+    public static readonly DependencyProperty CloseButtonTemplateProperty =
+        DependencyProperty.Register(nameof(CloseButtonTemplate), typeof(DataTemplate), typeof(UctVirtualDesktop),
+            new PropertyMetadata(null));
+
+    public DataTemplate MaximizedButtonTemplate
+    {
+        get => (DataTemplate)GetValue(MaximizedButtonTemplateProperty);
+        set => SetValue(MaximizedButtonTemplateProperty, value);
+    }
+
+    public static readonly DependencyProperty MaximizedButtonTemplateProperty =
+        DependencyProperty.Register(nameof(MaximizedButtonTemplate), typeof(DataTemplate),
+            typeof(UctVirtualDesktop), new PropertyMetadata(null));
+
+    public DataTemplate MinimizedButtonTemplate
+    {
+        get => (DataTemplate)GetValue(MinimizedButtonTemplateProperty);
+        set => SetValue(MinimizedButtonTemplateProperty, value);
+    }
+
+    public static readonly DependencyProperty MinimizedButtonTemplateProperty =
+        DependencyProperty.Register(nameof(MinimizedButtonTemplate), typeof(DataTemplate),
+            typeof(UctVirtualDesktop), new PropertyMetadata(null));
 
     //--------------------------
     //
@@ -370,8 +472,20 @@ public class UctVirtualDesktop : Control
             item.AppButton.IsSelected = item == appInfo;
         }
 
-        _currentApp = appInfo;
-        _brdContent.Child = appInfo.InstancedUI;
+        UctVirtualDesktopApplicationPanel appPanel = new UctVirtualDesktopApplicationPanel()
+        {
+            Content = appInfo.InstancedUI
+        };
+        appPanel.SetResourceReference(UctVirtualDesktopApplicationPanel.BackgroundProperty, "UctWindowBackgroundColor");
+        appPanel.SetResourceReference(UctVirtualDesktopApplicationPanel.ContentBackgroundProperty,
+            "UctDefaultBackgroundColor");
+        appPanel.SetBinding(UctVirtualDesktopApplicationPanel.MinimizedButtonTemplateProperty,
+            new Binding(nameof(MinimizedButtonTemplate)) { Source = this });
+        appPanel.SetBinding(UctVirtualDesktopApplicationPanel.MaximizedButtonTemplateProperty,
+            new Binding(nameof(MaximizedButtonTemplate)) { Source = this });
+        appPanel.SetBinding(UctVirtualDesktopApplicationPanel.CloseButtonTemplateProperty,
+            new Binding(nameof(CloseButtonTemplate)) { Source = this });
+        _gridContent.Children.Add(appPanel);
     }
 
     //--------------------------
@@ -426,6 +540,21 @@ public class UctVirtualDesktop : Control
         var app = _runningAppInfos.FirstOrDefault(it => it.AppButton == sender);
         if (app != null)
             SetCurrentApplication(app);
+    }
+
+    private void MnuBackground_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (CanUserChangeBackground)
+        {
+            var dia = new OpenFileDialog()
+            {
+                Filter = "Image Files (*.png;*.jpg;*.bmp)|*.png;*.jpg;*.bmp"
+            };
+            if (dia.ShowDialog() == true)
+            {
+                DesktopBackgroundImage = dia.FileName;
+            }
+        }
     }
 
     //--------------------------
