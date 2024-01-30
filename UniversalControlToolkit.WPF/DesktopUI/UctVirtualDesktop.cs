@@ -23,7 +23,14 @@ public class UctVirtualDesktop : Control
     private readonly Grid _gridHost, _gridTaskbar, _gridTaskbarMenu, _gridContent;
     private readonly ContentPresenter _cpStartButton;
     private readonly StackPanel _applicationPanel;
-    private readonly Border _brdModal, _brdTaskbar, _brdTaskbarMenu, _brdContent, _brdStartButton;
+
+    private readonly Border _brdModal,
+        _brdTaskbar,
+        _brdTaskbarMenu,
+        _brdContent,
+        _brdStartButton,
+        _brdGlobalMouseActions;
+
     private readonly UctMenu _taskbarMenu;
     private readonly DropShadowEffect _dseTaskbarMenu;
     private readonly UctVirtualDesktopPanel _desktopPanel;
@@ -221,6 +228,15 @@ public class UctVirtualDesktop : Control
         _brdTaskbarMenu.SetBinding(UctMenu.HeightProperty, new Binding(nameof(TaskbarMenuMaxHeight)) { Source = this });
 
         _gridHost.Children.Add(_brdTaskbarMenu);
+
+        _brdGlobalMouseActions = new Border()
+        {
+            IsHitTestVisible = false,
+            Background = Brushes.Transparent
+        };
+        Grid.SetColumnSpan(_brdGlobalMouseActions, 3);
+        Grid.SetRowSpan(_brdGlobalMouseActions, 3);
+        _gridHost.Children.Add(_brdGlobalMouseActions);
         BuildupPlacementDependencies();
         AddVisualChild(_gridHost);
     }
@@ -512,6 +528,18 @@ public class UctVirtualDesktop : Control
                 ToogleApplicationMaximize(GetAppInfo(sender as UctVirtualDesktopApplicationPanel));
             appPanel.Activated += (sender, args) =>
                 ActivateApplication(GetAppInfo(sender as UctVirtualDesktopApplicationPanel));
+            appPanel.GlobalMouseOperationStarted += (sender, args) =>
+            {
+                _brdGlobalMouseActions.IsHitTestVisible = true;
+                _brdGlobalMouseActions.Cursor = args.DesiredCursor;
+                args.MouseHost = _brdGlobalMouseActions;
+                args.Handled = true;
+            };
+            appPanel.GlobalMouseOperationFinished += (sender, args) =>
+            {
+                _brdGlobalMouseActions.IsHitTestVisible = false;
+                _brdGlobalMouseActions.Cursor = null;
+            };
             _gridContent.Children.Add(appPanel);
             appInfo.Panel = appPanel;
         }

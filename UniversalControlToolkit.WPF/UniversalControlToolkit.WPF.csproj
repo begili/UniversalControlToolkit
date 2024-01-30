@@ -8,7 +8,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="DesktopUI\Utils\" />
       <Folder Include="Themes\" />
     </ItemGroup>
 

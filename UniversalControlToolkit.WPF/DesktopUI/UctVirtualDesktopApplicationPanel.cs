@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using UniversalControlToolkit.WPF.DesktopUI.Utils;
 
 namespace UniversalControlToolkit.WPF.DesktopUI;
 
@@ -15,13 +16,18 @@ public class UctVirtualDesktopApplicationPanel : Control
     //
     //--------------------------
 
-    public event EventHandler<EventArgs> MaximizeRequested, MinimizeRequested, CloseRequested, Activated;
+    public event EventHandler<EventArgs> MaximizeRequested,
+        MinimizeRequested,
+        CloseRequested,
+        Activated,
+        GlobalMouseOperationFinished;
+
+    public event EventHandler<GlobalMouseOperationEventArgs> GlobalMouseOperationStarted;
 
     private readonly Border _brdMainFrame, _brdContentFrame;
     private bool _isMouseDown;
     private MouseDownMode? _mouseDownMode;
     private Point? _parentMouseDownPoint;
-    private IInputElement? _inputParent;
     private Thickness? _mouseDownMargin;
     private double _mouseDownWidth, _mouseDownHeight;
     private readonly UctImageButton _btnMinimize, _btnMaximize, _btnClose;
@@ -309,11 +315,18 @@ public class UctVirtualDesktopApplicationPanel : Control
         if (!_isMouseDown && _mouseDownMode != null && !_btnMinimize.IsMouseOver && !_btnMaximize.IsMouseOver &&
             !_btnClose.IsMouseOver)
         {
-            if (!(Parent is IInputElement parent))
+            var args = new GlobalMouseOperationEventArgs() { DesiredCursor = Cursor };
+            GlobalMouseOperationStarted?.Invoke(this, args);
+
+            if (!args.Handled || args.MouseHost == null)
                 return;
-            _inputParent = parent;
+
+            args.MouseHost.MouseMove += MouseHost_OnMouseMove;
+            args.MouseHost.MouseLeave += MouseHost_OnMouseLeave;
+            args.MouseHost.PreviewMouseLeftButtonUp += MouseHost_OnPreviewMouseLeftButtonUp;
+
             _isMouseDown = true;
-            _parentMouseDownPoint = e.GetPosition(_inputParent);
+            _parentMouseDownPoint = e.GetPosition(args.MouseHost);
             _mouseDownMargin = Margin;
             _mouseDownWidth = double.IsNaN(DesiredWidth) ? ActualWidth : DesiredWidth;
             _mouseDownHeight = double.IsNaN(DesiredHeight) ? ActualHeight : DesiredHeight;
@@ -322,10 +335,34 @@ public class UctVirtualDesktopApplicationPanel : Control
         base.OnPreviewMouseLeftButtonDown(e);
     }
 
-    protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
+    private void DetachFromGlobalMouseHost(object sender)
     {
         _isMouseDown = false;
-        base.OnPreviewMouseLeftButtonUp(e);
+
+        var mouseHost = sender as IInputElement;
+        if (mouseHost != null)
+        {
+            mouseHost.MouseMove -= MouseHost_OnMouseMove;
+            mouseHost.MouseLeave -= MouseHost_OnMouseLeave;
+            mouseHost.PreviewMouseLeftButtonUp -= MouseHost_OnPreviewMouseLeftButtonUp;
+        }
+
+        GlobalMouseOperationFinished?.Invoke(this, new EventArgs());
+    }
+
+    protected override void OnPreviewMouseDoubleClick(MouseButtonEventArgs e)
+    {
+        var position = e.GetPosition(this);
+
+        if (position.Y < (IsMaximized ? 32 : 37))
+        {
+            IsMaximized = !IsMaximized;
+            e.Handled = true;
+        }
+        else
+        {
+            base.OnPreviewMouseDoubleClick(e);
+        }
     }
 
     protected override void OnPreviewMouseMove(MouseEventArgs e)
@@ -377,7 +414,7 @@ public class UctVirtualDesktopApplicationPanel : Control
                 }
             }
 
-            if (_mouseDownMode == null && pt.Y < 32)
+            if (_mouseDownMode == null && pt.Y < (IsMaximized ? 32 : 37))
             {
                 _mouseDownMode = MouseDownMode.DragHeader;
             }
@@ -405,10 +442,45 @@ public class UctVirtualDesktopApplicationPanel : Control
                     break;
             }
         }
-        else if (_inputParent != null && _mouseDownMode != null)
+
+        base.OnPreviewMouseMove(e);
+    }
+
+    protected override void OnMouseLeave(MouseEventArgs e)
+    {
+        _isMouseDown = false;
+        base.OnMouseLeave(e);
+    }
+
+    private void SetSizes()
+    {
+        if (IsMaximized)
         {
-            var parentPoint = e.GetPosition(_inputParent);
+            Height = double.NaN;
+            Width = double.NaN;
+            Margin = new Thickness(0);
+            HorizontalAlignment = HorizontalAlignment.Stretch;
+            VerticalAlignment = VerticalAlignment.Stretch;
+        }
+        else
+        {
+            Height = DesiredHeight;
+            Width = DesiredWidth;
+            Margin = DesiredMargin;
+            HorizontalAlignment = HorizontalAlignment.Left;
+            VerticalAlignment = VerticalAlignment.Top;
+        }
+    }
+
+    private void MouseHost_OnMouseMove(object sender, MouseEventArgs e)
+    {
+        var inputParent = sender as IInputElement;
+        if (inputParent != null && _mouseDownMode != null)
+        {
+            var parentPoint = e.GetPosition(inputParent);
             var dist = parentPoint - _parentMouseDownPoint;
+            if (dist.Value.Length < 3)
+                return;
             IsMaximized = false;
             switch (_mouseDownMode)
             {
@@ -456,34 +528,16 @@ public class UctVirtualDesktopApplicationPanel : Control
                     break;
             }
         }
-
-        base.OnPreviewMouseMove(e);
     }
 
-    protected override void OnMouseLeave(MouseEventArgs e)
+    private void MouseHost_OnMouseLeave(object sender, MouseEventArgs e)
     {
-        _isMouseDown = false;
-        base.OnMouseLeave(e);
+        DetachFromGlobalMouseHost(sender);
     }
 
-    private void SetSizes()
+    private void MouseHost_OnPreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (IsMaximized)
-        {
-            Height = double.NaN;
-            Width = double.NaN;
-            Margin = new Thickness(0);
-            HorizontalAlignment = HorizontalAlignment.Stretch;
-            VerticalAlignment = VerticalAlignment.Stretch;
-        }
-        else
-        {
-            Height = DesiredHeight;
-            Width = DesiredWidth;
-            Margin = DesiredMargin;
-            HorizontalAlignment = HorizontalAlignment.Left;
-            VerticalAlignment = VerticalAlignment.Top;
-        }
+        DetachFromGlobalMouseHost(sender);
     }
 
     //--------------------------
