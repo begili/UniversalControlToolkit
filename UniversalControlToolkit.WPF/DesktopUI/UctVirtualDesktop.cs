@@ -499,7 +499,11 @@ public class UctVirtualDesktop : Control
         {
             UctVirtualDesktopApplicationPanel appPanel = new UctVirtualDesktopApplicationPanel()
             {
-                Content = appInfo.InstancedUI
+                Content = appInfo.InstancedUI,
+                IsMaximized = appInfo.ModuleDefinition.IsMaximized,
+                DesiredWidth = appInfo.ModuleDefinition.DesiredWidth,
+                DesiredHeight = appInfo.ModuleDefinition.DesiredHeight,
+                DesiredMargin = appInfo.ModuleDefinition.DesiredMargin
             };
             appPanel.SetResourceReference(UctVirtualDesktopApplicationPanel.BackgroundProperty,
                 "UctWindowBackgroundColor");
@@ -648,7 +652,7 @@ public class UctVirtualDesktop : Control
         {
             ModuleDefinition = e.ModuleDefinition,
             InstancedUI = e.ModuleDefinition.GetModuleUI(),
-            AppButton = appButton
+            AppButton = appButton,
         };
         LaunchOrResumeApplication(newApp);
     }

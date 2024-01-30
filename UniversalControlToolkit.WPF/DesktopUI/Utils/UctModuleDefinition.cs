@@ -13,6 +13,14 @@ public class UctModuleDefinition
 
     public int MaxInstances { get; set; } = 0;
 
+    public double DesiredHeight { get; set; } = double.NaN;
+
+    public double DesiredWidth { get; set; } = double.NaN;
+
+    public Thickness DesiredMargin { get; set; } = new Thickness(0);
+    
+    public bool IsMaximized { get; set; }
+
     public UIElement? GetModuleUI()
     {
         UctModuleCreateEventArgs args = new UctModuleCreateEventArgs();

@@ -489,40 +489,40 @@ public class UctVirtualDesktopApplicationPanel : Control
                         _mouseDownMargin.Value.Top + (int)dist.Value.Y, 0, 0);
                     break;
                 case MouseDownMode.ResizeLeft:
-                    DesiredWidth = _mouseDownWidth - (int)dist.Value.X;
+                    DesiredWidth = Math.Max(_mouseDownWidth - (int)dist.Value.X, 0);
                     DesiredMargin = new Thickness(_mouseDownMargin.Value.Left + (int)dist.Value.X,
                         _mouseDownMargin.Value.Top, 0, 0);
                     break;
                 case MouseDownMode.ResizeTopLeft:
-                    DesiredWidth = _mouseDownWidth - (int)dist.Value.X;
-                    DesiredHeight = _mouseDownHeight - (int)dist.Value.Y;
+                    DesiredWidth = Math.Max(_mouseDownWidth - (int)dist.Value.X, 0);
+                    DesiredHeight = Math.Max(_mouseDownHeight - (int)dist.Value.Y, 0);
                     DesiredMargin = new Thickness(_mouseDownMargin.Value.Left + (int)dist.Value.X,
                         _mouseDownMargin.Value.Top + (int)dist.Value.Y, 0, 0);
                     break;
                 case MouseDownMode.ResizeTop:
-                    DesiredHeight = _mouseDownHeight - (int)dist.Value.Y;
+                    DesiredHeight = Math.Max(_mouseDownHeight - (int)dist.Value.Y, 0);
                     DesiredMargin = new Thickness(_mouseDownMargin.Value.Left,
                         _mouseDownMargin.Value.Top + (int)dist.Value.Y, 0, 0);
                     break;
                 case MouseDownMode.ResizeTopRight:
-                    DesiredHeight = _mouseDownHeight - (int)dist.Value.Y;
-                    DesiredWidth = _mouseDownWidth + (int)dist.Value.X;
+                    DesiredHeight = Math.Max(_mouseDownHeight - (int)dist.Value.Y, 0);
+                    DesiredWidth = Math.Max(_mouseDownWidth + (int)dist.Value.X, 0);
                     DesiredMargin = new Thickness(_mouseDownMargin.Value.Left,
                         _mouseDownMargin.Value.Top + (int)dist.Value.Y, 0, 0);
                     break;
                 case MouseDownMode.ResizeRight:
-                    DesiredWidth = _mouseDownWidth + (int)dist.Value.X;
+                    DesiredWidth = Math.Max(_mouseDownWidth + (int)dist.Value.X, 0);
                     break;
                 case MouseDownMode.ResizeBottomRight:
-                    DesiredWidth = _mouseDownWidth + (int)dist.Value.X;
-                    DesiredHeight = _mouseDownHeight + (int)dist.Value.Y;
+                    DesiredWidth = Math.Max(_mouseDownWidth + (int)dist.Value.X, 0);
+                    DesiredHeight = Math.Max(_mouseDownHeight + (int)dist.Value.Y, 0);
                     break;
                 case MouseDownMode.ResizeBottom:
-                    DesiredHeight = _mouseDownHeight + (int)dist.Value.Y;
+                    DesiredHeight = Math.Max(_mouseDownHeight + (int)dist.Value.Y, 0);
                     break;
                 case MouseDownMode.ResizeBottomLeft:
-                    DesiredWidth = _mouseDownWidth - (int)dist.Value.X;
-                    DesiredHeight = _mouseDownHeight + (int)dist.Value.Y;
+                    DesiredWidth = Math.Max(_mouseDownWidth - (int)dist.Value.X, 0);
+                    DesiredHeight = Math.Max(_mouseDownHeight + (int)dist.Value.Y, 0);
                     DesiredMargin = new Thickness(_mouseDownMargin.Value.Left + (int)dist.Value.X,
                         _mouseDownMargin.Value.Top, 0, 0);
                     break;

@@ -15,7 +15,7 @@
             <DataTemplate x:Key="appIcon1">
                 <TextBlock Text="1" Foreground="{DynamicResource UctCommonForegroundColor}"></TextBlock>
             </DataTemplate>
-            <DataTemplate x:Key="appIcon2" >
+            <DataTemplate x:Key="appIcon2">
                 <TextBlock Text="2" Foreground="{DynamicResource UctCommonForegroundColor}"></TextBlock>
             </DataTemplate>
             <DataTemplate x:Key="appIconGeneric">
@@ -46,14 +46,15 @@
                 <desktopUi:UctMenuItem.ModuleDefinition>
                     <utils:UctModuleDefinition ModuleCreateRequest="App1_OnModuleCreateRequest"
                                                Icon="{StaticResource appIcon1}" AppName="App1"
-                                               MaxInstances="1" />
+                                               MaxInstances="1" DesiredHeight="350" DesiredWidth="500"
+                                               DesiredMargin="100,100,0,0" IsMaximized="False" />
                 </desktopUi:UctMenuItem.ModuleDefinition>
             </desktopUi:UctMenuItem>
             <desktopUi:UctMenuItem Content="App2" AppIcon="{StaticResource appIcon2}">
                 <desktopUi:UctMenuItem.ModuleDefinition>
                     <utils:UctModuleDefinition ModuleCreateRequest="App2_OnModuleCreateRequest"
                                                Icon="{StaticResource appIcon2}" AppName="App2"
-                                               MaxInstances="1" />
+                                               MaxInstances="1" IsMaximized="True" />
                 </desktopUi:UctMenuItem.ModuleDefinition>
             </desktopUi:UctMenuItem>
         </desktopUi:UctVirtualDesktop.MenuItems>
