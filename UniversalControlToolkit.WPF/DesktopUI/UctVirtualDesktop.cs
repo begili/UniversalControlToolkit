@@ -502,11 +502,19 @@ public class UctVirtualDesktop : Control
                 new Binding(nameof(CloseButtonTemplate)) { Source = this });
             appPanel.SetResourceReference(UctVirtualDesktopApplicationPanel.HeaderButtonHighlightBackgroundProperty,
                 "UctTaskbarHighlightedColor");
+            appPanel.SetBinding(UctVirtualDesktopApplicationPanel.IconProperty,
+                new Binding(nameof(RunningAppInfo.ModuleDefinition.Icon)) { Source = appInfo.ModuleDefinition });
+            appPanel.SetBinding(UctVirtualDesktopApplicationPanel.ApplicationTitleProperty,
+                new Binding(nameof(RunningAppInfo.ModuleDefinition.AppName)) { Source = appInfo.ModuleDefinition });
+            appPanel.SetResourceReference(UctVirtualDesktopApplicationPanel.ForegroundProperty,
+                "UctCommonForegroundColor");
             SetAppInfo(appPanel, appInfo);
             appPanel.CloseRequested += (sender, args) =>
                 CloseApplication(GetAppInfo(sender as UctVirtualDesktopApplicationPanel));
             appPanel.MinimizeRequested += (sender, args) =>
                 MinimizeApplication(GetAppInfo(sender as UctVirtualDesktopApplicationPanel));
+            appPanel.MaximizeRequested += (sender, args) =>
+                ToogleApplicationMaximize(GetAppInfo(sender as UctVirtualDesktopApplicationPanel));
             _gridContent.Children.Add(appPanel);
             appInfo.Panel = appPanel;
         }
@@ -533,6 +541,12 @@ public class UctVirtualDesktop : Control
     {
         if (appInfo?.Panel != null)
             appInfo.Panel.Visibility = Visibility.Collapsed;
+    }
+
+    private void ToogleApplicationMaximize(RunningAppInfo? appInfo)
+    {
+        if (appInfo.Panel != null)
+            appInfo.Panel.IsMaximized = !appInfo.Panel.IsMaximized;
     }
 
     private void CloseApplication(RunningAppInfo? appInfo)

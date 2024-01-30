@@ -41,6 +41,23 @@ public class UctVirtualDesktopApplicationPanel : Control
             Height = 32
         };
 
+        ContentPresenter cpIcon = new ContentPresenter();
+        cpIcon.SetBinding(ContentPresenter.ContentTemplateProperty, new Binding(nameof(Icon)) { Source = this });
+
+        Viewbox vbIcon = new Viewbox()
+        {
+            Height = 32,
+            Width = 32,
+            Child = cpIcon,
+            Margin = new Thickness(0, 0, 5, 0)
+        };
+        headerGrid.Children.Add(vbIcon);
+
+        TextBlock tbTitle = new TextBlock() { VerticalAlignment = VerticalAlignment.Center };
+        tbTitle.SetBinding(TextBlock.TextProperty, new Binding(nameof(ApplicationTitle)) { Source = this });
+        Grid.SetColumn(tbTitle, 1);
+        headerGrid.Children.Add(tbTitle);
+
         UctImageButton btnMinimize = new UctImageButton();
         btnMinimize.SetBinding(UctImageButton.ContentTemplateProperty,
             new Binding(nameof(MinimizedButtonTemplate)) { Source = this });
@@ -172,13 +189,13 @@ public class UctVirtualDesktopApplicationPanel : Control
 
     public string ApplicationTitle
     {
-        get => (string)GetValue(ApplicationTitlePropertyKey.DependencyProperty);
-        protected set => SetValue(ApplicationTitlePropertyKey, value);
+        get => (string)GetValue(ApplicationTitleProperty);
+        set => SetValue(ApplicationTitleProperty, value);
     }
 
-    private static readonly DependencyPropertyKey ApplicationTitlePropertyKey =
-        DependencyProperty.RegisterReadOnly(nameof(ApplicationTitle), typeof(string),
-            typeof(UctVirtualDesktopApplicationPanel), new PropertyMetadata(null));
+    public static readonly DependencyProperty ApplicationTitleProperty =
+        DependencyProperty.Register(nameof(ApplicationTitle), typeof(string), typeof(UctVirtualDesktopApplicationPanel),
+            new PropertyMetadata(null));
 
     public Brush ContentBackground
     {

@@ -13,10 +13,10 @@
     <Window.Resources>
         <ResourceDictionary>
             <DataTemplate x:Key="appIcon1">
-                <TextBlock Text="1"></TextBlock>
+                <TextBlock Text="1" Foreground="{DynamicResource UctCommonForegroundColor}"></TextBlock>
             </DataTemplate>
-            <DataTemplate x:Key="appIcon2">
-                <TextBlock Text="2"></TextBlock>
+            <DataTemplate x:Key="appIcon2" >
+                <TextBlock Text="2" Foreground="{DynamicResource UctCommonForegroundColor}"></TextBlock>
             </DataTemplate>
             <DataTemplate x:Key="appIconGeneric">
                 <TextBlock Foreground="{DynamicResource UctTaskbarForegroundColor}"
