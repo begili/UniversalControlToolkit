@@ -77,7 +77,7 @@ public class UctMenuItem : Control
             VerticalAlignment = VerticalAlignment.Stretch,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             Child = _cpIcon,
-            Margin = new Thickness(2)
+            Margin = new Thickness(10)
         };
         _grdHost.Children.Add(vb);
 

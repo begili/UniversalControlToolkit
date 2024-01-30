@@ -7,7 +7,7 @@ using System.Windows.Media;
 
 namespace UniversalControlToolkit.WPF.DesktopUI;
 
-public class UctApplicationButton : Control
+public class UctImageButton : Control
 {
     //--------------------------
     //
@@ -23,7 +23,7 @@ public class UctApplicationButton : Control
     //
     //--------------------------
 
-    public UctApplicationButton()
+    public UctImageButton()
     {
         var cp = new ContentPresenter();
         cp.SetBinding(ContentPresenter.ContentProperty, new Binding(nameof(Content)) { Source = this });
@@ -74,7 +74,7 @@ public class UctApplicationButton : Control
     }
 
     public static readonly DependencyProperty ContentProperty =
-        DependencyProperty.Register(nameof(Content), typeof(object), typeof(UctApplicationButton),
+        DependencyProperty.Register(nameof(Content), typeof(object), typeof(UctImageButton),
             new PropertyMetadata(null));
 
     public DataTemplate ContentTemplate
@@ -84,7 +84,7 @@ public class UctApplicationButton : Control
     }
 
     public static readonly DependencyProperty ContentTemplateProperty =
-        DependencyProperty.Register(nameof(ContentTemplate), typeof(DataTemplate), typeof(UctApplicationButton),
+        DependencyProperty.Register(nameof(ContentTemplate), typeof(DataTemplate), typeof(UctImageButton),
             new PropertyMetadata(null));
 
     public bool IsSelected
@@ -94,7 +94,7 @@ public class UctApplicationButton : Control
     }
 
     public static readonly DependencyProperty IsSelectedProperty =
-        DependencyProperty.Register(nameof(IsSelected), typeof(bool), typeof(UctApplicationButton),
+        DependencyProperty.Register(nameof(IsSelected), typeof(bool), typeof(UctImageButton),
             new PropertyMetadata(false));
 
     public Brush HighlightBackground
@@ -104,7 +104,7 @@ public class UctApplicationButton : Control
     }
 
     public static readonly DependencyProperty HighlightBackgroundProperty =
-        DependencyProperty.Register(nameof(HighlightBackground), typeof(Brush), typeof(UctApplicationButton),
+        DependencyProperty.Register(nameof(HighlightBackground), typeof(Brush), typeof(UctImageButton),
             new PropertyMetadata(Brushes.LightBlue));
 
     public Brush SelectedBackground
@@ -114,7 +114,7 @@ public class UctApplicationButton : Control
     }
 
     public static readonly DependencyProperty SelectedBackgroundProperty =
-        DependencyProperty.Register(nameof(SelectedBackground), typeof(Brush), typeof(UctApplicationButton),
+        DependencyProperty.Register(nameof(SelectedBackground), typeof(Brush), typeof(UctImageButton),
             new PropertyMetadata(Brushes.SkyBlue));
 
     //--------------------------

@@ -7,5 +7,6 @@
     <SolidColorBrush x:Key="UctTaskmenuHighlightedColor" Color="#20FFFFFF"></SolidColorBrush>
     <SolidColorBrush x:Key="UctTaskbarHighlightedColor" Color="#20FFFFFF"></SolidColorBrush>
     <SolidColorBrush x:Key="UctTaskbarSelectedColor" Color="#80FFFFFF"></SolidColorBrush>
+    <SolidColorBrush x:Key="UctDefaultBackgroundColor" Color="#FF232323"></SolidColorBrush>
 
 </ResourceDictionary>

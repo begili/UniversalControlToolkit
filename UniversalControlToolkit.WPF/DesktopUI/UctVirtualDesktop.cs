@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 using UniversalControlToolkit.WPF.DesktopUI.Utils;
 using Brushes = System.Windows.Media.Brushes;
 
@@ -18,11 +19,12 @@ public class UctVirtualDesktop : Control
     //
     //--------------------------
 
-    private readonly Grid _gridHost, _gridTaskbar;
+    private readonly Grid _gridHost, _gridTaskbar, _gridTaskbarMenu;
     private readonly ContentPresenter _cpStartButton;
     private readonly StackPanel _applicationPanel;
     private readonly Border _brdModal, _brdTaskbar, _brdTaskbarMenu, _brdContent, _brdStartButton;
     private readonly UctMenu _taskbarMenu;
+    private readonly DropShadowEffect _dseTaskbarMenu;
 
     private readonly IList<RunningAppInfo> _runningAppInfos;
     private RunningAppInfo _currentApp;
@@ -158,10 +160,25 @@ public class UctVirtualDesktop : Control
         };
         _taskbarMenu.SetBinding(UctMenu.GroupIconProperty, new Binding(nameof(GroupIcon)) { Source = this });
 
+        _gridTaskbarMenu = new Grid()
+        {
+            RowDefinitions =
+            {
+                new RowDefinition() { Height = new GridLength(1, GridUnitType.Star) },
+                new RowDefinition() { Height = GridLength.Auto }
+            }
+        };
+        _gridTaskbarMenu.Children.Add(scrv);
+        var cpFooter = new ContentPresenter();
+        cpFooter.SetBinding(ContentPresenter.ContentProperty, new Binding(nameof(MenuFooterContent)) { Source = this });
+        Grid.SetRow(cpFooter, 1);
+        _gridTaskbarMenu.Children.Add(cpFooter);
+
         _brdTaskbarMenu = new Border()
         {
             Visibility = Visibility.Collapsed,
-            Child = scrv
+            Child = _gridTaskbarMenu,
+            Effect = (_dseTaskbarMenu = new DropShadowEffect() { Color = Color.FromArgb(0x40, 0x40, 0x40, 0x40) })
         };
         _brdTaskbarMenu.SetResourceReference(Border.BackgroundProperty, "UctTaskmenuBackgroundColor");
         Grid.SetRow(_brdTaskbarMenu, 1);
@@ -261,6 +278,15 @@ public class UctVirtualDesktop : Control
         DependencyProperty.Register(nameof(GroupIcon), typeof(DataTemplate), typeof(UctVirtualDesktop),
             new PropertyMetadata(null));
 
+    public object MenuFooterContent
+    {
+        get => (object)GetValue(MenuFooterContentProperty);
+        set => SetValue(MenuFooterContentProperty, value);
+    }
+
+    public static readonly DependencyProperty MenuFooterContentProperty =
+        DependencyProperty.Register(nameof(MenuFooterContent), typeof(object), typeof(UctVirtualDesktop), new PropertyMetadata(null));
+
     //--------------------------
     //
     //      methods
@@ -281,24 +307,28 @@ public class UctVirtualDesktop : Control
                 Grid.SetColumn(_brdTaskbar, 1);
                 _brdTaskbarMenu.HorizontalAlignment = HorizontalAlignment.Left;
                 _brdTaskbarMenu.VerticalAlignment = VerticalAlignment.Bottom;
+                _dseTaskbarMenu.Direction = 45;
                 break;
             case TaskbarPlacement.Top:
                 Grid.SetRow(_brdTaskbar, 0);
                 Grid.SetColumn(_brdTaskbar, 1);
                 _brdTaskbarMenu.HorizontalAlignment = HorizontalAlignment.Left;
                 _brdTaskbarMenu.VerticalAlignment = VerticalAlignment.Top;
+                _dseTaskbarMenu.Direction = 315;
                 break;
             case TaskbarPlacement.Left:
                 Grid.SetRow(_brdTaskbar, 1);
                 Grid.SetColumn(_brdTaskbar, 0);
                 _brdTaskbarMenu.HorizontalAlignment = HorizontalAlignment.Left;
                 _brdTaskbarMenu.VerticalAlignment = VerticalAlignment.Top;
+                _dseTaskbarMenu.Direction = 315;
                 break;
             case TaskbarPlacement.Right:
                 Grid.SetRow(_brdTaskbar, 1);
                 Grid.SetColumn(_brdTaskbar, 2);
                 _brdTaskbarMenu.HorizontalAlignment = HorizontalAlignment.Right;
                 _brdTaskbarMenu.VerticalAlignment = VerticalAlignment.Top;
+                _dseTaskbarMenu.Direction = 225;
                 break;
         }
 
@@ -373,14 +403,14 @@ public class UctVirtualDesktop : Control
             return;
         }
 
-        var appButton = new UctApplicationButton()
+        var appButton = new UctImageButton()
         {
             ContentTemplate = e.ModuleDefinition.Icon ?? DefaultAppIcon, ToolTip = e.ModuleDefinition.AppName
         };
-        appButton.SetBinding(UctApplicationButton.HeightProperty, new Binding(nameof(TaskbarSize)) { Source = this });
-        appButton.SetBinding(UctApplicationButton.WidthProperty, new Binding(nameof(TaskbarSize)) { Source = this });
-        appButton.SetResourceReference(UctApplicationButton.HighlightBackgroundProperty, "UctTaskbarHighlightedColor");
-        appButton.SetResourceReference(UctApplicationButton.SelectedBackgroundProperty, "UctTaskbarSelectedColor");
+        appButton.SetBinding(UctImageButton.HeightProperty, new Binding(nameof(TaskbarSize)) { Source = this });
+        appButton.SetBinding(UctImageButton.WidthProperty, new Binding(nameof(TaskbarSize)) { Source = this });
+        appButton.SetResourceReference(UctImageButton.HighlightBackgroundProperty, "UctTaskbarHighlightedColor");
+        appButton.SetResourceReference(UctImageButton.SelectedBackgroundProperty, "UctTaskbarSelectedColor");
         appButton.MouseLeftButtonDown += AppButton_OnMouseLeftButtonDown;
         RunningAppInfo newApp = new RunningAppInfo()
         {
@@ -429,7 +459,7 @@ public class UctVirtualDesktop : Control
 
         public UIElement InstancedUI { get; set; }
 
-        public UctApplicationButton AppButton { get; set; }
+        public UctImageButton AppButton { get; set; }
     }
 }
 
