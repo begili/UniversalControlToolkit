@@ -479,11 +479,6 @@ public class UctVirtualDesktop : Control
             isNew = true;
         }
 
-        foreach (var item in _runningAppInfos)
-        {
-            item.AppButton.IsSelected = item == appInfo;
-        }
-
         if (isNew)
         {
             UctVirtualDesktopApplicationPanel appPanel = new UctVirtualDesktopApplicationPanel()
@@ -515,10 +510,17 @@ public class UctVirtualDesktop : Control
                 MinimizeApplication(GetAppInfo(sender as UctVirtualDesktopApplicationPanel));
             appPanel.MaximizeRequested += (sender, args) =>
                 ToogleApplicationMaximize(GetAppInfo(sender as UctVirtualDesktopApplicationPanel));
+            appPanel.Activated += (sender, args) =>
+                ActivateApplication(GetAppInfo(sender as UctVirtualDesktopApplicationPanel));
             _gridContent.Children.Add(appPanel);
             appInfo.Panel = appPanel;
         }
 
+        ActivateApplication(appInfo);
+    }
+
+    private void ActivateApplication(RunningAppInfo? appInfo)
+    {
         foreach (UIElement item in _gridContent.Children)
         {
             if (item is UctVirtualDesktopApplicationPanel panel)
@@ -534,6 +536,11 @@ public class UctVirtualDesktop : Control
                     Grid.SetZIndex(panel, 1);
                 }
             }
+        }
+
+        foreach (var item in _runningAppInfos)
+        {
+            item.AppButton.IsSelected = item == appInfo;
         }
     }
 
@@ -571,11 +578,12 @@ public class UctVirtualDesktop : Control
     }
 
 
-//--------------------------
-//
-//      events
-//
-//--------------------------
+    //--------------------------
+    //
+    //      events
+    //
+    //--------------------------
+
     private void CpStartButton_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         _brdModal.Visibility = _brdTaskbarMenu.Visibility =
@@ -639,11 +647,11 @@ public class UctVirtualDesktop : Control
         }
     }
 
-//--------------------------
-//
-//      classes
-//
-//--------------------------
+    //--------------------------
+    //
+    //      classes
+    //
+    //--------------------------
 
     private class RcDefConverter : IMultiValueConverter
     {

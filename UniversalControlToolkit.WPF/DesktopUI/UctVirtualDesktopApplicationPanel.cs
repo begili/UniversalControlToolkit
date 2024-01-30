@@ -1,6 +1,8 @@
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace UniversalControlToolkit.WPF.DesktopUI;
@@ -13,15 +15,30 @@ public class UctVirtualDesktopApplicationPanel : Control
     //
     //--------------------------
 
-    public event EventHandler<EventArgs> MaximizeRequested, MinimizeRequested, CloseRequested;
+    public event EventHandler<EventArgs> MaximizeRequested, MinimizeRequested, CloseRequested, Activated;
 
     private readonly Border _brdMainFrame, _brdContentFrame;
+    private bool _isMouseDown;
+    private MouseDownMode? _mouseDownMode;
+    private Point? _parentMouseDownPoint;
+    private IInputElement? _inputParent;
+    private Thickness? _mouseDownMargin;
+    private double _mouseDownWidth, _mouseDownHeight;
+    private readonly UctImageButton _btnMinimize, _btnMaximize, _btnClose;
 
     //--------------------------
     //
     //      constructor
     //
     //--------------------------
+
+    static UctVirtualDesktopApplicationPanel()
+    {
+        MinHeightProperty.OverrideMetadata(typeof(UctVirtualDesktopApplicationPanel),
+            new FrameworkPropertyMetadata(100.0));
+        MinWidthProperty.OverrideMetadata(typeof(UctVirtualDesktopApplicationPanel),
+            new FrameworkPropertyMetadata(100.0));
+    }
 
     public UctVirtualDesktopApplicationPanel()
     {
@@ -40,6 +57,8 @@ public class UctVirtualDesktopApplicationPanel : Control
             },
             Height = 32
         };
+        headerGrid.SetBinding(Grid.MarginProperty, new Binding(nameof(IsMaximized))
+            { Source = this, Converter = new HeaderMarginConverter() });
 
         ContentPresenter cpIcon = new ContentPresenter();
         cpIcon.SetBinding(ContentPresenter.ContentTemplateProperty, new Binding(nameof(Icon)) { Source = this });
@@ -53,37 +72,37 @@ public class UctVirtualDesktopApplicationPanel : Control
         };
         headerGrid.Children.Add(vbIcon);
 
-        TextBlock tbTitle = new TextBlock() { VerticalAlignment = VerticalAlignment.Center };
+        TextBlock tbTitle = new TextBlock() { VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
         tbTitle.SetBinding(TextBlock.TextProperty, new Binding(nameof(ApplicationTitle)) { Source = this });
         Grid.SetColumn(tbTitle, 1);
         headerGrid.Children.Add(tbTitle);
 
-        UctImageButton btnMinimize = new UctImageButton();
-        btnMinimize.SetBinding(UctImageButton.ContentTemplateProperty,
+        _btnMinimize = new UctImageButton();
+        _btnMinimize.SetBinding(UctImageButton.ContentTemplateProperty,
             new Binding(nameof(MinimizedButtonTemplate)) { Source = this });
-        btnMinimize.SetBinding(UctImageButton.HighlightBackgroundProperty,
+        _btnMinimize.SetBinding(UctImageButton.HighlightBackgroundProperty,
             new Binding(nameof(HeaderButtonHighlightBackground)) { Source = this });
-        Grid.SetColumn(btnMinimize, 3);
-        btnMinimize.MouseLeftButtonDown += (sender, args) => MinimizeRequested?.Invoke(this, new EventArgs());
-        headerGrid.Children.Add(btnMinimize);
+        Grid.SetColumn(_btnMinimize, 3);
+        _btnMinimize.MouseLeftButtonDown += (sender, args) => MinimizeRequested?.Invoke(this, new EventArgs());
+        headerGrid.Children.Add(_btnMinimize);
 
-        UctImageButton btnMaximize = new UctImageButton();
-        btnMaximize.SetBinding(UctImageButton.ContentTemplateProperty,
+        _btnMaximize = new UctImageButton();
+        _btnMaximize.SetBinding(UctImageButton.ContentTemplateProperty,
             new Binding(nameof(MaximizedButtonTemplate)) { Source = this });
-        btnMaximize.SetBinding(UctImageButton.HighlightBackgroundProperty,
+        _btnMaximize.SetBinding(UctImageButton.HighlightBackgroundProperty,
             new Binding(nameof(HeaderButtonHighlightBackground)) { Source = this });
-        Grid.SetColumn(btnMaximize, 4);
-        btnMaximize.MouseLeftButtonDown += (sender, args) => MaximizeRequested?.Invoke(this, new EventArgs());
-        headerGrid.Children.Add(btnMaximize);
+        Grid.SetColumn(_btnMaximize, 4);
+        _btnMaximize.MouseLeftButtonDown += (sender, args) => MaximizeRequested?.Invoke(this, new EventArgs());
+        headerGrid.Children.Add(_btnMaximize);
 
-        UctImageButton btnClose = new UctImageButton();
-        btnClose.SetBinding(UctImageButton.ContentTemplateProperty,
+        _btnClose = new UctImageButton();
+        _btnClose.SetBinding(UctImageButton.ContentTemplateProperty,
             new Binding(nameof(CloseButtonTemplate)) { Source = this });
-        btnClose.SetBinding(UctImageButton.HighlightBackgroundProperty,
+        _btnClose.SetBinding(UctImageButton.HighlightBackgroundProperty,
             new Binding(nameof(HeaderButtonHighlightBackground)) { Source = this });
-        Grid.SetColumn(btnClose, 5);
-        btnClose.MouseLeftButtonDown += (sender, args) => CloseRequested?.Invoke(this, new EventArgs());
-        headerGrid.Children.Add(btnClose);
+        Grid.SetColumn(_btnClose, 5);
+        _btnClose.MouseLeftButtonDown += (sender, args) => CloseRequested?.Invoke(this, new EventArgs());
+        headerGrid.Children.Add(_btnClose);
 
         Grid hostGrid = new Grid()
         {
@@ -114,6 +133,7 @@ public class UctVirtualDesktopApplicationPanel : Control
             Child = hostGrid
         };
         _brdMainFrame.SetBinding(Border.BackgroundProperty, new Binding(nameof(Background)) { Source = this });
+        SetSizes();
         AddVisualChild(_brdMainFrame);
     }
 
@@ -134,17 +154,6 @@ public class UctVirtualDesktopApplicationPanel : Control
     public static readonly DependencyProperty ContentProperty =
         DependencyProperty.Register(nameof(Content), typeof(object), typeof(UctVirtualDesktopApplicationPanel),
             new PropertyMetadata(null));
-
-
-    public bool IsMaximized
-    {
-        get => (bool)GetValue(IsMaximizedProperty);
-        set => SetValue(IsMaximizedProperty, value);
-    }
-
-    public static readonly DependencyProperty IsMaximizedProperty =
-        DependencyProperty.Register(nameof(IsMaximized), typeof(bool), typeof(UctVirtualDesktopApplicationPanel),
-            new PropertyMetadata(false));
 
     public DataTemplate CloseButtonTemplate
     {
@@ -217,6 +226,70 @@ public class UctVirtualDesktopApplicationPanel : Control
         DependencyProperty.Register(nameof(HeaderButtonHighlightBackground), typeof(Brush),
             typeof(UctVirtualDesktopApplicationPanel), new PropertyMetadata(Brushes.SkyBlue));
 
+    public bool IsMaximized
+    {
+        get => (bool)GetValue(IsMaximizedProperty);
+        set => SetValue(IsMaximizedProperty, value);
+    }
+
+    public static readonly DependencyProperty IsMaximizedProperty =
+        DependencyProperty.Register(nameof(IsMaximized), typeof(bool), typeof(UctVirtualDesktopApplicationPanel),
+            new PropertyMetadata(false, OnIsMaximizedChanged));
+
+    private static void OnIsMaximizedChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+    {
+        var snd = sender as UctVirtualDesktopApplicationPanel;
+        snd.SetSizes();
+    }
+
+    public double DesiredWidth
+    {
+        get => (double)GetValue(DesiredWidthProperty);
+        set => SetValue(DesiredWidthProperty, value);
+    }
+
+    public static readonly DependencyProperty DesiredWidthProperty =
+        DependencyProperty.Register(nameof(DesiredWidth), typeof(double), typeof(UctVirtualDesktopApplicationPanel),
+            new PropertyMetadata(double.NaN, OnDesiredWidthChanged));
+
+    private static void OnDesiredWidthChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+    {
+        var snd = sender as UctVirtualDesktopApplicationPanel;
+        snd.SetSizes();
+    }
+
+    public double DesiredHeight
+    {
+        get => (double)GetValue(DesiredHeightProperty);
+        set => SetValue(DesiredHeightProperty, value);
+    }
+
+    public static readonly DependencyProperty DesiredHeightProperty =
+        DependencyProperty.Register(nameof(DesiredHeight), typeof(double), typeof(UctVirtualDesktopApplicationPanel),
+            new PropertyMetadata(double.NaN, OnDesiredHeightChanged));
+
+    private static void OnDesiredHeightChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+    {
+        var snd = sender as UctVirtualDesktopApplicationPanel;
+        snd.SetSizes();
+    }
+
+    public Thickness DesiredMargin
+    {
+        get => (Thickness)GetValue(DesiredMarginProperty);
+        set => SetValue(DesiredMarginProperty, value);
+    }
+
+    public static readonly DependencyProperty DesiredMarginProperty =
+        DependencyProperty.Register(nameof(DesiredMargin), typeof(Thickness), typeof(UctVirtualDesktopApplicationPanel),
+            new PropertyMetadata(new Thickness(0), OnDesiredMarginChanged));
+
+    private static void OnDesiredMarginChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+    {
+        var snd = sender as UctVirtualDesktopApplicationPanel;
+        snd.SetSizes();
+    }
+
     //--------------------------
     //
     //      methods
@@ -224,4 +297,226 @@ public class UctVirtualDesktopApplicationPanel : Control
     //--------------------------
 
     protected override Visual GetVisualChild(int index) => _brdMainFrame;
+
+    protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
+    {
+        Activated?.Invoke(this, new EventArgs());
+        base.OnPreviewMouseDown(e);
+    }
+
+    protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
+    {
+        if (!_isMouseDown && _mouseDownMode != null && !_btnMinimize.IsMouseOver && !_btnMaximize.IsMouseOver &&
+            !_btnClose.IsMouseOver)
+        {
+            if (!(Parent is IInputElement parent))
+                return;
+            _inputParent = parent;
+            _isMouseDown = true;
+            _parentMouseDownPoint = e.GetPosition(_inputParent);
+            _mouseDownMargin = Margin;
+            _mouseDownWidth = double.IsNaN(DesiredWidth) ? ActualWidth : DesiredWidth;
+            _mouseDownHeight = double.IsNaN(DesiredHeight) ? ActualHeight : DesiredHeight;
+        }
+
+        base.OnPreviewMouseLeftButtonDown(e);
+    }
+
+    protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
+    {
+        _isMouseDown = false;
+        base.OnPreviewMouseLeftButtonUp(e);
+    }
+
+    protected override void OnPreviewMouseMove(MouseEventArgs e)
+    {
+        if (!_isMouseDown)
+        {
+            var pt = e.GetPosition(this);
+            _mouseDownMode = null;
+            if (!IsMaximized)
+            {
+                if (pt.X < 5 && pt.X > 1)
+                {
+                    _mouseDownMode = MouseDownMode.ResizeLeft;
+                }
+                else if (pt.X > ActualWidth - 5 && pt.X < ActualWidth - 1)
+                {
+                    _mouseDownMode = MouseDownMode.ResizeRight;
+                }
+
+                if (pt.Y < 5 && pt.Y > 1)
+                {
+                    switch (_mouseDownMode)
+                    {
+                        case MouseDownMode.ResizeLeft:
+                            _mouseDownMode = MouseDownMode.ResizeTopLeft;
+                            break;
+                        case MouseDownMode.ResizeRight:
+                            _mouseDownMode = MouseDownMode.ResizeTopRight;
+                            break;
+                        default:
+                            _mouseDownMode = MouseDownMode.ResizeTop;
+                            break;
+                    }
+                }
+                else if (pt.Y > ActualHeight - 5 && pt.Y < ActualHeight - 1)
+                {
+                    switch (_mouseDownMode)
+                    {
+                        case MouseDownMode.ResizeLeft:
+                            _mouseDownMode = MouseDownMode.ResizeBottomLeft;
+                            break;
+                        case MouseDownMode.ResizeRight:
+                            _mouseDownMode = MouseDownMode.ResizeBottomRight;
+                            break;
+                        default:
+                            _mouseDownMode = MouseDownMode.ResizeBottom;
+                            break;
+                    }
+                }
+            }
+
+            if (_mouseDownMode == null && pt.Y < 32)
+            {
+                _mouseDownMode = MouseDownMode.DragHeader;
+            }
+
+            switch (_mouseDownMode)
+            {
+                case MouseDownMode.ResizeBottom:
+                case MouseDownMode.ResizeTop:
+                    Cursor = Cursors.SizeNS;
+                    break;
+                case MouseDownMode.ResizeLeft:
+                case MouseDownMode.ResizeRight:
+                    Cursor = Cursors.SizeWE;
+                    break;
+                case MouseDownMode.ResizeTopRight:
+                case MouseDownMode.ResizeBottomLeft:
+                    Cursor = Cursors.SizeNESW;
+                    break;
+                case MouseDownMode.ResizeTopLeft:
+                case MouseDownMode.ResizeBottomRight:
+                    Cursor = Cursors.SizeNWSE;
+                    break;
+                default:
+                    Cursor = null;
+                    break;
+            }
+        }
+        else if (_inputParent != null && _mouseDownMode != null)
+        {
+            var parentPoint = e.GetPosition(_inputParent);
+            var dist = parentPoint - _parentMouseDownPoint;
+            IsMaximized = false;
+            switch (_mouseDownMode)
+            {
+                case MouseDownMode.DragHeader:
+                    DesiredMargin = new Thickness(_mouseDownMargin.Value.Left + (int)dist.Value.X,
+                        _mouseDownMargin.Value.Top + (int)dist.Value.Y, 0, 0);
+                    break;
+                case MouseDownMode.ResizeLeft:
+                    DesiredWidth = _mouseDownWidth - (int)dist.Value.X;
+                    DesiredMargin = new Thickness(_mouseDownMargin.Value.Left + (int)dist.Value.X,
+                        _mouseDownMargin.Value.Top, 0, 0);
+                    break;
+                case MouseDownMode.ResizeTopLeft:
+                    DesiredWidth = _mouseDownWidth - (int)dist.Value.X;
+                    DesiredHeight = _mouseDownHeight - (int)dist.Value.Y;
+                    DesiredMargin = new Thickness(_mouseDownMargin.Value.Left + (int)dist.Value.X,
+                        _mouseDownMargin.Value.Top + (int)dist.Value.Y, 0, 0);
+                    break;
+                case MouseDownMode.ResizeTop:
+                    DesiredHeight = _mouseDownHeight - (int)dist.Value.Y;
+                    DesiredMargin = new Thickness(_mouseDownMargin.Value.Left,
+                        _mouseDownMargin.Value.Top + (int)dist.Value.Y, 0, 0);
+                    break;
+                case MouseDownMode.ResizeTopRight:
+                    DesiredHeight = _mouseDownHeight - (int)dist.Value.Y;
+                    DesiredWidth = _mouseDownWidth + (int)dist.Value.X;
+                    DesiredMargin = new Thickness(_mouseDownMargin.Value.Left,
+                        _mouseDownMargin.Value.Top + (int)dist.Value.Y, 0, 0);
+                    break;
+                case MouseDownMode.ResizeRight:
+                    DesiredWidth = _mouseDownWidth + (int)dist.Value.X;
+                    break;
+                case MouseDownMode.ResizeBottomRight:
+                    DesiredWidth = _mouseDownWidth + (int)dist.Value.X;
+                    DesiredHeight = _mouseDownHeight + (int)dist.Value.Y;
+                    break;
+                case MouseDownMode.ResizeBottom:
+                    DesiredHeight = _mouseDownHeight + (int)dist.Value.Y;
+                    break;
+                case MouseDownMode.ResizeBottomLeft:
+                    DesiredWidth = _mouseDownWidth - (int)dist.Value.X;
+                    DesiredHeight = _mouseDownHeight + (int)dist.Value.Y;
+                    DesiredMargin = new Thickness(_mouseDownMargin.Value.Left + (int)dist.Value.X,
+                        _mouseDownMargin.Value.Top, 0, 0);
+                    break;
+            }
+        }
+
+        base.OnPreviewMouseMove(e);
+    }
+
+    protected override void OnMouseLeave(MouseEventArgs e)
+    {
+        _isMouseDown = false;
+        base.OnMouseLeave(e);
+    }
+
+    private void SetSizes()
+    {
+        if (IsMaximized)
+        {
+            Height = double.NaN;
+            Width = double.NaN;
+            Margin = new Thickness(0);
+            HorizontalAlignment = HorizontalAlignment.Stretch;
+            VerticalAlignment = VerticalAlignment.Stretch;
+        }
+        else
+        {
+            Height = DesiredHeight;
+            Width = DesiredWidth;
+            Margin = DesiredMargin;
+            HorizontalAlignment = HorizontalAlignment.Left;
+            VerticalAlignment = VerticalAlignment.Top;
+        }
+    }
+
+    //--------------------------
+    //
+    //      classes
+    //
+    //--------------------------
+
+    private class HeaderMarginConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool bVal && bVal)
+                return new Thickness(0);
+            return new Thickness(0, 5, 0, 0);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotSupportedException();
+        }
+    }
+
+    private enum MouseDownMode
+    {
+        DragHeader,
+        ResizeLeft,
+        ResizeTopLeft,
+        ResizeTop,
+        ResizeTopRight,
+        ResizeRight,
+        ResizeBottomRight,
+        ResizeBottom,
+        ResizeBottomLeft
+    }
 }
