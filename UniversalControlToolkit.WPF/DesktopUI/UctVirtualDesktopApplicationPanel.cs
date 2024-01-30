@@ -13,6 +13,8 @@ public class UctVirtualDesktopApplicationPanel : Control
     //
     //--------------------------
 
+    public event EventHandler<EventArgs> MaximizeRequested, MinimizeRequested, CloseRequested;
+
     private readonly Border _brdMainFrame, _brdContentFrame;
 
     //--------------------------
@@ -42,19 +44,28 @@ public class UctVirtualDesktopApplicationPanel : Control
         UctImageButton btnMinimize = new UctImageButton();
         btnMinimize.SetBinding(UctImageButton.ContentTemplateProperty,
             new Binding(nameof(MinimizedButtonTemplate)) { Source = this });
+        btnMinimize.SetBinding(UctImageButton.HighlightBackgroundProperty,
+            new Binding(nameof(HeaderButtonHighlightBackground)) { Source = this });
         Grid.SetColumn(btnMinimize, 3);
+        btnMinimize.MouseLeftButtonDown += (sender, args) => MinimizeRequested?.Invoke(this, new EventArgs());
         headerGrid.Children.Add(btnMinimize);
 
         UctImageButton btnMaximize = new UctImageButton();
         btnMaximize.SetBinding(UctImageButton.ContentTemplateProperty,
             new Binding(nameof(MaximizedButtonTemplate)) { Source = this });
+        btnMaximize.SetBinding(UctImageButton.HighlightBackgroundProperty,
+            new Binding(nameof(HeaderButtonHighlightBackground)) { Source = this });
         Grid.SetColumn(btnMaximize, 4);
+        btnMaximize.MouseLeftButtonDown += (sender, args) => MaximizeRequested?.Invoke(this, new EventArgs());
         headerGrid.Children.Add(btnMaximize);
 
         UctImageButton btnClose = new UctImageButton();
         btnClose.SetBinding(UctImageButton.ContentTemplateProperty,
             new Binding(nameof(CloseButtonTemplate)) { Source = this });
+        btnClose.SetBinding(UctImageButton.HighlightBackgroundProperty,
+            new Binding(nameof(HeaderButtonHighlightBackground)) { Source = this });
         Grid.SetColumn(btnClose, 5);
+        btnClose.MouseLeftButtonDown += (sender, args) => CloseRequested?.Invoke(this, new EventArgs());
         headerGrid.Children.Add(btnClose);
 
         Grid hostGrid = new Grid()
@@ -125,7 +136,8 @@ public class UctVirtualDesktopApplicationPanel : Control
     }
 
     public static readonly DependencyProperty CloseButtonTemplateProperty =
-        DependencyProperty.Register(nameof(CloseButtonTemplate), typeof(DataTemplate), typeof(UctVirtualDesktopPanel),
+        DependencyProperty.Register(nameof(CloseButtonTemplate), typeof(DataTemplate),
+            typeof(UctVirtualDesktopApplicationPanel),
             new PropertyMetadata(null));
 
     public DataTemplate MaximizedButtonTemplate
@@ -177,6 +189,16 @@ public class UctVirtualDesktopApplicationPanel : Control
     public static readonly DependencyProperty ContentBackgroundProperty =
         DependencyProperty.Register(nameof(ContentBackground), typeof(Brush), typeof(UctVirtualDesktopApplicationPanel),
             new PropertyMetadata(Brushes.Transparent));
+
+    public Brush HeaderButtonHighlightBackground
+    {
+        get => (Brush)GetValue(HeaderButtonHighlightBackgroundProperty);
+        set => SetValue(HeaderButtonHighlightBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty HeaderButtonHighlightBackgroundProperty =
+        DependencyProperty.Register(nameof(HeaderButtonHighlightBackground), typeof(Brush),
+            typeof(UctVirtualDesktopApplicationPanel), new PropertyMetadata(Brushes.SkyBlue));
 
     //--------------------------
     //

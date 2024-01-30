@@ -231,6 +231,16 @@ public class UctVirtualDesktop : Control
     //
     //--------------------------
 
+    public static readonly DependencyProperty AppInfoProperty =
+        DependencyProperty.RegisterAttached("AppInfo", typeof(RunningAppInfo), typeof(UctVirtualDesktop),
+            new PropertyMetadata(defaultValue: null));
+
+    public static RunningAppInfo GetAppInfo(UctVirtualDesktopApplicationPanel target) =>
+        (RunningAppInfo)target.GetValue(AppInfoProperty);
+
+    public static void SetAppInfo(UctVirtualDesktopApplicationPanel target, RunningAppInfo value) =>
+        target.SetValue(AppInfoProperty, value);
+
     protected override int VisualChildrenCount => 1;
 
     public double TaskbarSize
@@ -459,12 +469,14 @@ public class UctVirtualDesktop : Control
         }
     }
 
-    private void SetCurrentApplication(RunningAppInfo appInfo)
+    private void LaunchOrResumeApplication(RunningAppInfo appInfo)
     {
+        bool isNew = false;
         if (!_runningAppInfos.Contains(appInfo))
         {
             _runningAppInfos.Add(appInfo);
             _applicationPanel.Children.Add(appInfo.AppButton);
+            isNew = true;
         }
 
         foreach (var item in _runningAppInfos)
@@ -472,28 +484,84 @@ public class UctVirtualDesktop : Control
             item.AppButton.IsSelected = item == appInfo;
         }
 
-        UctVirtualDesktopApplicationPanel appPanel = new UctVirtualDesktopApplicationPanel()
+        if (isNew)
         {
-            Content = appInfo.InstancedUI
-        };
-        appPanel.SetResourceReference(UctVirtualDesktopApplicationPanel.BackgroundProperty, "UctWindowBackgroundColor");
-        appPanel.SetResourceReference(UctVirtualDesktopApplicationPanel.ContentBackgroundProperty,
-            "UctDefaultBackgroundColor");
-        appPanel.SetBinding(UctVirtualDesktopApplicationPanel.MinimizedButtonTemplateProperty,
-            new Binding(nameof(MinimizedButtonTemplate)) { Source = this });
-        appPanel.SetBinding(UctVirtualDesktopApplicationPanel.MaximizedButtonTemplateProperty,
-            new Binding(nameof(MaximizedButtonTemplate)) { Source = this });
-        appPanel.SetBinding(UctVirtualDesktopApplicationPanel.CloseButtonTemplateProperty,
-            new Binding(nameof(CloseButtonTemplate)) { Source = this });
-        _gridContent.Children.Add(appPanel);
+            UctVirtualDesktopApplicationPanel appPanel = new UctVirtualDesktopApplicationPanel()
+            {
+                Content = appInfo.InstancedUI
+            };
+            appPanel.SetResourceReference(UctVirtualDesktopApplicationPanel.BackgroundProperty,
+                "UctWindowBackgroundColor");
+            appPanel.SetResourceReference(UctVirtualDesktopApplicationPanel.ContentBackgroundProperty,
+                "UctDefaultBackgroundColor");
+            appPanel.SetBinding(UctVirtualDesktopApplicationPanel.MinimizedButtonTemplateProperty,
+                new Binding(nameof(MinimizedButtonTemplate)) { Source = this });
+            appPanel.SetBinding(UctVirtualDesktopApplicationPanel.MaximizedButtonTemplateProperty,
+                new Binding(nameof(MaximizedButtonTemplate)) { Source = this });
+            appPanel.SetBinding(UctVirtualDesktopApplicationPanel.CloseButtonTemplateProperty,
+                new Binding(nameof(CloseButtonTemplate)) { Source = this });
+            appPanel.SetResourceReference(UctVirtualDesktopApplicationPanel.HeaderButtonHighlightBackgroundProperty,
+                "UctTaskbarHighlightedColor");
+            SetAppInfo(appPanel, appInfo);
+            appPanel.CloseRequested += (sender, args) =>
+                CloseApplication(GetAppInfo(sender as UctVirtualDesktopApplicationPanel));
+            appPanel.MinimizeRequested += (sender, args) =>
+                MinimizeApplication(GetAppInfo(sender as UctVirtualDesktopApplicationPanel));
+            _gridContent.Children.Add(appPanel);
+            appInfo.Panel = appPanel;
+        }
+
+        foreach (UIElement item in _gridContent.Children)
+        {
+            if (item is UctVirtualDesktopApplicationPanel panel)
+            {
+                if (panel.Content == appInfo.InstancedUI)
+                {
+                    if (item.Visibility != Visibility.Visible)
+                        item.Visibility = Visibility.Visible;
+                    Grid.SetZIndex(panel, 2);
+                }
+                else
+                {
+                    Grid.SetZIndex(panel, 1);
+                }
+            }
+        }
     }
 
-    //--------------------------
-    //
-    //      events
-    //
-    //--------------------------
+    private void MinimizeApplication(RunningAppInfo? appInfo)
+    {
+        if (appInfo?.Panel != null)
+            appInfo.Panel.Visibility = Visibility.Collapsed;
+    }
 
+    private void CloseApplication(RunningAppInfo? appInfo)
+    {
+        if (appInfo != null && _runningAppInfos.Contains(appInfo))
+        {
+            UIElement? removePanel = null;
+            foreach (UIElement item in _gridContent.Children)
+            {
+                if (item is UctVirtualDesktopApplicationPanel panel && panel.Content == appInfo.InstancedUI)
+                {
+                    removePanel = item;
+                    break;
+                }
+            }
+
+            _runningAppInfos.Remove(appInfo);
+            _applicationPanel.Children.Remove(appInfo.AppButton);
+            if (removePanel != null)
+                _gridContent.Children.Remove(removePanel);
+        }
+    }
+
+
+//--------------------------
+//
+//      events
+//
+//--------------------------
     private void CpStartButton_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         _brdModal.Visibility = _brdTaskbarMenu.Visibility =
@@ -513,7 +581,7 @@ public class UctVirtualDesktop : Control
         {
             var app = _runningAppInfos.FirstOrDefault(it => it.ModuleDefinition == e.ModuleDefinition);
             if (app != null)
-                SetCurrentApplication(app);
+                LaunchOrResumeApplication(app);
             return;
         }
 
@@ -532,14 +600,14 @@ public class UctVirtualDesktop : Control
             InstancedUI = e.ModuleDefinition.GetModuleUI(),
             AppButton = appButton
         };
-        SetCurrentApplication(newApp);
+        LaunchOrResumeApplication(newApp);
     }
 
     private void AppButton_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         var app = _runningAppInfos.FirstOrDefault(it => it.AppButton == sender);
         if (app != null)
-            SetCurrentApplication(app);
+            LaunchOrResumeApplication(app);
     }
 
     private void MnuBackground_OnClick(object sender, RoutedEventArgs e)
@@ -557,11 +625,11 @@ public class UctVirtualDesktop : Control
         }
     }
 
-    //--------------------------
-    //
-    //      classes
-    //
-    //--------------------------
+//--------------------------
+//
+//      classes
+//
+//--------------------------
 
     private class RcDefConverter : IMultiValueConverter
     {
@@ -582,13 +650,15 @@ public class UctVirtualDesktop : Control
         }
     }
 
-    private class RunningAppInfo
+    public class RunningAppInfo
     {
         public UctModuleDefinition ModuleDefinition { get; set; }
 
         public UIElement InstancedUI { get; set; }
 
         public UctImageButton AppButton { get; set; }
+
+        public UctVirtualDesktopApplicationPanel Panel { get; set; }
     }
 }
 

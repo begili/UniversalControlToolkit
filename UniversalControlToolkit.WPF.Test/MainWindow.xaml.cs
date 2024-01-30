@@ -24,10 +24,22 @@ public partial class MainWindow : Window
 
     private void App1_OnModuleCreateRequest(object? sender, UctModuleCreateEventArgs e)
     {
+        e.ModuleUI = new TextBlock()
+        {
+            VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center,
+            FontSize = 40, Text = "APP 1"
+        };
+        e.Handled = true;
     }
 
     private void App2_OnModuleCreateRequest(object? sender, UctModuleCreateEventArgs e)
     {
+        e.ModuleUI = new TextBlock()
+        {
+            VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center,
+            FontSize = 40, Text = "APP 2"
+        };
+        e.Handled = true;
     }
 
     private void BtnSelectTheme_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
