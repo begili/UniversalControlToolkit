@@ -8,12 +8,15 @@
         xmlns:svg="https://github.com/dotnetprojects/SVGImage"
         xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="850" Width="1200">
     <Grid>
         <desktopUi:UctVirtualDesktop>
             <desktopUi:UctVirtualDesktop.StartButtonContent>
                 <svgc:SvgViewbox Height="32" Width="32" Margin="5" Source="pack://application:,,,/UniversalControlToolkit.WPF.Test;component/svg/menu.svg" />
             </desktopUi:UctVirtualDesktop.StartButtonContent>
+            <desktopUi:UctVirtualDesktop.MenuItems>
+                <desktopUi:UctMenuItem Content="Application 1"></desktopUi:UctMenuItem>
+            </desktopUi:UctVirtualDesktop.MenuItems>
         </desktopUi:UctVirtualDesktop>
     </Grid>
 </Window>
