@@ -1,0 +1,22 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:styling="clr-namespace:UniversalControlToolkit.WPF.Styling;assembly=UniversalControlToolkit.WPF">
+    <Style x:Key="redStroke" TargetType="Shape">
+        <styling:CombinedStyleSetter Property="Stroke" Value="Red" />
+    </Style>
+    <Style x:Key="greenStroke" TargetType="Shape">
+        <styling:CombinedStyleSetter Property="Stroke" Value="Green" />
+    </Style>
+    <Style x:Key="thinStroke" TargetType="Shape">
+        <styling:CombinedStyleSetter Property="StrokeThickness" Value="1.0" ImportanceLevel="1" />
+    </Style>
+    <Style x:Key="thickStroke" TargetType="Shape">
+        <styling:CombinedStyleSetter Property="StrokeThickness" Value="5.0" />
+    </Style>
+    <Style x:Key="yellowFill" TargetType="Shape">
+        <styling:CombinedStyleSetter Property="Fill" Value="Yellow" />
+    </Style>
+    <Style x:Key="blueFill" TargetType="Shape">
+        <styling:CombinedStyleSetter Property="Fill" Value="Blue" />
+    </Style>
+</ResourceDictionary>

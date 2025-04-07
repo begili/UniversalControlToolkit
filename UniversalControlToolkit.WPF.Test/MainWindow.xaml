@@ -18,6 +18,9 @@
             <DataTemplate x:Key="appIcon2">
                 <TextBlock Text="2" Foreground="{DynamicResource UctCommonForegroundColor}"></TextBlock>
             </DataTemplate>
+            <DataTemplate x:Key="appIconStyleTest">
+                <TextBlock Text="ST" Foreground="{DynamicResource UctCommonForegroundColor}"></TextBlock>
+            </DataTemplate>
             <DataTemplate x:Key="appIconGeneric">
                 <TextBlock Foreground="{DynamicResource UctTaskbarForegroundColor}"
                            FontFamily="{StaticResource IcoFont}"
@@ -55,6 +58,13 @@
                     <utils:UctModuleDefinition ModuleCreateRequest="App2_OnModuleCreateRequest"
                                                Icon="{StaticResource appIcon2}" AppName="App2"
                                                MaxInstances="1" IsMaximized="True" />
+                </desktopUi:UctMenuItem.ModuleDefinition>
+            </desktopUi:UctMenuItem>
+            <desktopUi:UctMenuItem Content="Style Test" AppIcon="{StaticResource appIconStyleTest}">
+                <desktopUi:UctMenuItem.ModuleDefinition>
+                    <utils:UctModuleDefinition ModuleCreateRequest="UctModuleDefinition_OnModuleCreateRequest"
+                                               Icon="{StaticResource appIconStyleTest}" AppName="Style Test"
+                                               DesiredWidth="450" DesiredHeight="800" />
                 </desktopUi:UctMenuItem.ModuleDefinition>
             </desktopUi:UctMenuItem>
         </desktopUi:UctVirtualDesktop.MenuItems>

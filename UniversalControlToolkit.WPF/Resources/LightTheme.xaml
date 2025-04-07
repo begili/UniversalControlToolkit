@@ -2,14 +2,14 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <SolidColorBrush x:Key="UctTaskbarBackgroundColor" Color="#FFBFBFBF"></SolidColorBrush>
     <SolidColorBrush x:Key="UctTaskbarForegroundColor" Color="#FF1E1E1E"></SolidColorBrush>
-    <SolidColorBrush x:Key="UctTaskmenuBackgroundColor" Color="#FFDFDFDF"></SolidColorBrush>
+    <SolidColorBrush x:Key="UctTaskmenuBackgroundColor" Color="#FFCFCFCF"></SolidColorBrush>
     <SolidColorBrush x:Key="UctTaskmenuForegroundColor" Color="#FF1E1E1E"></SolidColorBrush>
     <SolidColorBrush x:Key="UctTaskmenuHighlightedColor" Color="#20FFFFFF"></SolidColorBrush>
     <SolidColorBrush x:Key="UctTaskbarHighlightedColor" Color="#20FFFFFF"></SolidColorBrush>
     <SolidColorBrush x:Key="UctTaskbarSelectedColor" Color="#80FFFFFF"></SolidColorBrush>
     <SolidColorBrush x:Key="UctDefaultBackgroundColor" Color="#FFCFCFCF"></SolidColorBrush>
     <SolidColorBrush x:Key="UctCommonForegroundColor" Color="#FF1E1E1E"></SolidColorBrush>
-    <SolidColorBrush x:Key="UctWindowBackgroundColor" Color="#FF9F9F9F"></SolidColorBrush>
+    <SolidColorBrush x:Key="UctWindowBackgroundColor" Color="#FFDFDFDF"></SolidColorBrush>
 
     <Style TargetType="ToolTip">
         <Setter Property="Background" Value="{DynamicResource UctTaskmenuBackgroundColor}"></Setter>

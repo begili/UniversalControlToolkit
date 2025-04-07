@@ -1,6 +1,7 @@
 ﻿using System.Configuration;
 using System.Data;
 using System.Windows;
+using UniversalControlToolkit.WPF.Styling;
 using UniversalControlToolkit.WPF.Utils;
 
 namespace UniversalControlToolkit.WPF.Test;
@@ -11,7 +12,15 @@ namespace UniversalControlToolkit.WPF.Test;
 public partial class App : Application
 {
     public bool IsDarkModeActive { get; private set; }
-    
+
+    public App()
+    {
+        ThemeController.RegisterTheme("light", false, null);
+        ThemeController.RegisterTheme("dark", true, null);
+        CombinedStyleEngine.RegisterDictionary(
+            "pack://application:,,,/UniversalControlToolkit.WPF.Test;component/StylingTest/SeparatedStyles.xaml");
+    }
+
     protected override void OnStartup(StartupEventArgs e)
     {
         SetTheme(true);
@@ -20,7 +29,7 @@ public partial class App : Application
 
     public void SetTheme(bool darkMode)
     {
-        ThemeController.SetTheme(darkMode);
+        ThemeController.SetTheme(darkMode ? "dark" : "light");
         IsDarkModeActive = darkMode;
     }
 }

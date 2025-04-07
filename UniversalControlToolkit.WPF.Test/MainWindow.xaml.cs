@@ -9,6 +9,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using UniversalControlToolkit.WPF.DesktopUI.Utils;
+using UniversalControlToolkit.WPF.Test.Views;
 
 namespace UniversalControlToolkit.WPF.Test;
 
@@ -50,5 +51,11 @@ public partial class MainWindow : Window
     private void BtnShutdown_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         App.Current.Shutdown(0);
+    }
+
+    private void UctModuleDefinition_OnModuleCreateRequest(object? sender, UctModuleCreateEventArgs e)
+    {
+        e.ModuleUI = new StyleTestView();
+        e.Handled = true;
     }
 }
