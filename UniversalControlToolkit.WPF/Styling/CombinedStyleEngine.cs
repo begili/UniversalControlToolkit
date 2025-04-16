@@ -4,7 +4,8 @@ namespace UniversalControlToolkit.WPF.Styling;
 
 public class CombinedStyleEngine : DependencyObject
 {
-    private static readonly IDictionary<string, Style> _generatedStyles = new Dictionary<string, Style>();
+    private static readonly IDictionary<string, IDictionary<Type, Style>> _generatedStyles =
+        new Dictionary<string, IDictionary<Type, Style>>();
 
     private static readonly IList<ResourceDictionary> _resources = new List<ResourceDictionary>();
 
@@ -32,7 +33,7 @@ public class CombinedStyleEngine : DependencyObject
     {
         FrameworkElement sender = d as FrameworkElement;
         string? newValue = e.NewValue as string;
-        sender.SetValue(FrameworkElement.StyleProperty, GetStyleForName(newValue));
+        sender.SetValue(FrameworkElement.StyleProperty, GetStyleForNameAndTargetType(newValue, sender.GetType()));
     }
 
     public static string? GetCombinedStyle(FrameworkElement element)
@@ -45,21 +46,23 @@ public class CombinedStyleEngine : DependencyObject
         element.SetValue(CombinedStyleProperty, value);
     }
 
-    private static Style? GetStyleForName(string? seStyle)
+    private static Style? GetStyleForNameAndTargetType(string? seStyle, Type targetType)
     {
         if (string.IsNullOrWhiteSpace(seStyle))
             return null;
         string[] names = seStyle.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries).OrderBy(it => it).ToArray();
         string rejoined = string.Join(' ', names);
-        if (!_generatedStyles.ContainsKey(rejoined))
+        if (!_generatedStyles.ContainsKey(rejoined) || !_generatedStyles[rejoined].ContainsKey(targetType))
         {
-            _generatedStyles[rejoined] = BuildJointStyle(names);
+            if (!_generatedStyles.ContainsKey(rejoined))
+                _generatedStyles.Add(rejoined, new Dictionary<Type, Style>());
+            _generatedStyles[rejoined][targetType] = BuildJointStyle(names, targetType);
         }
 
-        return _generatedStyles[rejoined];
+        return _generatedStyles[rejoined][targetType];
     }
 
-    private static Style BuildJointStyle(string[] styles)
+    private static Style BuildJointStyle(string[] styles, Type targetType)
     {
         Style jointStyle = new Style();
         Dictionary<DependencyProperty, Tuple<SetterBase, int>> _settersByImportanceLevel =
@@ -68,23 +71,26 @@ public class CombinedStyleEngine : DependencyObject
         {
             foreach (var resDict in _resources)
             {
-                if (resDict.Contains(style) && resDict[style] is Style resStyle)
+                var validKeys = resDict.Keys.OfType<string>().Where(it => it.EndsWith($".{style}"));
+                foreach (var styleKey in validKeys)
                 {
-                    foreach (var setterBase in resStyle.Setters)
+                    if (resDict.Contains(styleKey) && resDict[styleKey] is Style resStyle &&
+                        targetType.IsAssignableTo(resStyle.TargetType))
                     {
-                        if (setterBase is Setter setter)
+                        foreach (var setterBase in resStyle.Setters)
                         {
-                            int importance = (setter as CombinedStyleSetter)?.ImportanceLevel ?? 0;
-                            if (!_settersByImportanceLevel.ContainsKey(setter.Property) ||
-                                _settersByImportanceLevel[setter.Property].Item2 < importance)
+                            if (setterBase is Setter setter)
                             {
-                                _settersByImportanceLevel[setter.Property] =
-                                    new Tuple<SetterBase, int>(setter, importance);
+                                int importance = (setter as CombinedStyleSetter)?.ImportanceLevel ?? 0;
+                                if (!_settersByImportanceLevel.ContainsKey(setter.Property) ||
+                                    _settersByImportanceLevel[setter.Property].Item2 < importance)
+                                {
+                                    _settersByImportanceLevel[setter.Property] =
+                                        new Tuple<SetterBase, int>(setter, importance);
+                                }
                             }
                         }
                     }
-
-                    break;
                 }
             }
         }
