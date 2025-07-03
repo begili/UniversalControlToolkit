@@ -1,0 +1,21 @@
+<desktopUi:UctVirtualDesktopWindow x:Class="UniversalControlToolkit.WPF.Test.SubAppWindows.App2Window"
+                                   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                                   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                                   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                                   xmlns:local="clr-namespace:UniversalControlToolkit.WPF.Test.SubAppWindows"
+                                   xmlns:desktopUi="clr-namespace:UniversalControlToolkit.WPF.DesktopUI;assembly=UniversalControlToolkit.WPF"
+                                   mc:Ignorable="d"
+                                   DesiredHeight="300" DesiredWidth="300"
+                                   Margin="200,200,0,0"
+                                   d:DesignHeight="300" d:DesignWidth="300"
+                                   ApplicationTitle="App 2" AppKey="APP2">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+        </Grid.RowDefinitions>
+        <TextBlock Text="App 2" VerticalAlignment="Center" TextAlignment="Center" FontSize="20" FontWeight="Bold"></TextBlock>
+        <Button Content="SubWindow" Click="ButtonBase_OnClick" Grid.Row="1"/>
+    </Grid>
+</desktopUi:UctVirtualDesktopWindow>

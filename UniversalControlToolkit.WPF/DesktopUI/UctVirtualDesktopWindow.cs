@@ -18,6 +18,8 @@ public class UctVirtualDesktopWindow : Control
     //
     //--------------------------
 
+    private static int _sGlobalAppId = 0;
+
     public event EventHandler<EventArgs> MaximizeRequested,
         MinimizeRequested,
         CloseRequested,
@@ -33,6 +35,8 @@ public class UctVirtualDesktopWindow : Control
     private Thickness? _mouseDownMargin;
     private double _mouseDownWidth, _mouseDownHeight;
     private readonly UctImageButton _btnMinimize, _btnMaximize, _btnClose;
+    private UctVirtualDesktopWindow? _parentWindow;
+    private bool _isModal;
 
     //--------------------------
     //
@@ -150,6 +154,10 @@ public class UctVirtualDesktopWindow : Control
     //      properties
     //
     //--------------------------
+
+    internal int AppId { get; private set; }
+
+    internal int AppDepth { get; private set; }
 
     public bool IsSingleInstance
     {
@@ -324,11 +332,53 @@ public class UctVirtualDesktopWindow : Control
     //
     //--------------------------
 
-    public void Show()
+    public void Show(UctVirtualDesktopWindow? parent = null, bool isModal = false)
     {
+        if (parent != null)
+        {
+            AppId = parent.AppId;
+            AppDepth = parent.AppDepth + 1;
+        }
+        else
+        {
+            AppId = _sGlobalAppId++;
+            AppDepth = 0;
+        }
+
+        _parentWindow = parent;
+        _isModal = isModal;
+
         if (UctVirtualDesktop._currentDesktop == null)
             throw new InvalidOperationException("Cannot create a new Window without the Virtual Desktop");
         UctVirtualDesktop._currentDesktop.ShowWindow(this);
+        if (_parentWindow != null)
+            _parentWindow.SetBlockedByModal(true);
+    }
+
+    public void Close()
+    {
+        if (_parentWindow != null)
+            _parentWindow.SetBlockedByModal(false);
+    }
+
+    private void SetBlockedByModal(bool blocked)
+    {
+        IsHitTestVisible = !blocked;
+        if (_isModal)
+            return;
+        if (_parentWindow != null)
+            _parentWindow.SetBlockedByModal(blocked);
+    }
+
+    internal void TriggerOnClosed()
+    {
+        OnClosed();
+    }
+
+    protected virtual void OnClosed()
+    {
+        if (_isModal && _parentWindow != null)
+            _parentWindow.SetBlockedByModal(false);
     }
 
     protected override Visual GetVisualChild(int index) => _brdMainFrame;

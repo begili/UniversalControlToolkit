@@ -24,26 +24,6 @@ public partial class MainWindow : Window
         InitializeComponent();
     }
 
-    // private void App1_OnModuleCreateRequest(object? sender, UctModuleCreateEventArgs e)
-    // {
-    //     e.ModuleUI = new TextBlock()
-    //     {
-    //         VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center,
-    //         FontSize = 40, Text = "APP 1"
-    //     };
-    //     e.Handled = true;
-    // }
-    //
-    // private void App2_OnModuleCreateRequest(object? sender, UctModuleCreateEventArgs e)
-    // {
-    //     e.ModuleUI = new TextBlock()
-    //     {
-    //         VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center,
-    //         FontSize = 40, Text = "APP 2"
-    //     };
-    //     e.Handled = true;
-    // }
-
     private void BtnSelectTheme_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         (App.Current as App).SetTheme(!(App.Current as App).IsDarkModeActive);
@@ -57,5 +37,15 @@ public partial class MainWindow : Window
     private void App1_OnClicked(object? sender, EventArgs e)
     {
         (new App1Window()).Show();
+    }
+
+    private void App2_OnClicked(object? sender, EventArgs e)
+    {
+        (new App2Window()).Show();
+    }
+
+    private void StyleTest_OnClicked(object? sender, EventArgs e)
+    {
+        (new StyleTestView()).Show();
     }
 }

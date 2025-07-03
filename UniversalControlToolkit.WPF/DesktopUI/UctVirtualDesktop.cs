@@ -453,6 +453,15 @@ public class UctVirtualDesktop : Control
         LaunchOrResumeApplication(newApp);
     }
 
+    internal void CloseWindow(UctVirtualDesktopWindow window)
+    {
+        if (_runningAppInfos.Any(it => it.Window == window))
+        {
+            var appInfo =  _runningAppInfos.First(it => it.Window == window);
+            CloseApplication(appInfo);
+        }
+    }
+
     protected override Visual GetVisualChild(int index)
     {
         return _gridHost;
@@ -617,10 +626,10 @@ public class UctVirtualDesktop : Control
                 if (item is UctVirtualDesktopWindow window && window == appInfo.Window)
                 {
                     removePanel = item;
+                    window.TriggerOnClosed();
                     break;
                 }
             }
-
             _runningAppInfos.Remove(appInfo);
             _applicationPanel.Children.Remove(appInfo.AppButton);
             if (removePanel != null)

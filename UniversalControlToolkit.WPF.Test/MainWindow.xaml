@@ -47,9 +47,9 @@
         <desktopUi:UctVirtualDesktop.MenuItems>
             <desktopUi:UctMenuItem Content="App1" AppIcon="{StaticResource appIcon1}" Clicked="App1_OnClicked">
             </desktopUi:UctMenuItem>
-            <desktopUi:UctMenuItem Content="App2" AppIcon="{StaticResource appIcon2}">
+            <desktopUi:UctMenuItem Content="App2" AppIcon="{StaticResource appIcon2}" Clicked="App2_OnClicked">
             </desktopUi:UctMenuItem>
-            <desktopUi:UctMenuItem Content="Style Test" AppIcon="{StaticResource appIconStyleTest}">
+            <desktopUi:UctMenuItem Content="Style Test" AppIcon="{StaticResource appIconStyleTest}" Clicked="StyleTest_OnClicked">
             </desktopUi:UctMenuItem>
         </desktopUi:UctVirtualDesktop.MenuItems>
         <desktopUi:UctVirtualDesktop.MenuFooterContent>

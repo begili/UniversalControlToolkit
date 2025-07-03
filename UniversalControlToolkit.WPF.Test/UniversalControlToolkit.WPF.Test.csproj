@@ -21,4 +21,12 @@
       <PackageReference Include="SharpVectors" Version="1.8.3" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Page Update="SubAppWindows\App2Window.xaml">
+        <Generator>MSBuild:Compile</Generator>
+        <XamlRuntime>Wpf</XamlRuntime>
+        <SubType>Designer</SubType>
+      </Page>
+    </ItemGroup>
+
 </Project>
