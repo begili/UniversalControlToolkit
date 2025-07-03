@@ -3,12 +3,14 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Markup;
 using System.Windows.Media;
 using UniversalControlToolkit.WPF.DesktopUI.Utils;
 
 namespace UniversalControlToolkit.WPF.DesktopUI;
 
-public class UctVirtualDesktopApplicationPanel : Control
+[ContentProperty(nameof(Content))]
+public class UctVirtualDesktopWindow : Control
 {
     //--------------------------
     //
@@ -38,15 +40,15 @@ public class UctVirtualDesktopApplicationPanel : Control
     //
     //--------------------------
 
-    static UctVirtualDesktopApplicationPanel()
+    static UctVirtualDesktopWindow()
     {
-        MinHeightProperty.OverrideMetadata(typeof(UctVirtualDesktopApplicationPanel),
+        MinHeightProperty.OverrideMetadata(typeof(UctVirtualDesktopWindow),
             new FrameworkPropertyMetadata(100.0));
-        MinWidthProperty.OverrideMetadata(typeof(UctVirtualDesktopApplicationPanel),
+        MinWidthProperty.OverrideMetadata(typeof(UctVirtualDesktopWindow),
             new FrameworkPropertyMetadata(100.0));
     }
 
-    public UctVirtualDesktopApplicationPanel()
+    public UctVirtualDesktopWindow()
     {
         Grid headerGrid = new Grid()
         {
@@ -149,6 +151,26 @@ public class UctVirtualDesktopApplicationPanel : Control
     //
     //--------------------------
 
+    public bool IsSingleInstance
+    {
+        get => (bool)GetValue(IsSingleInstanceProperty);
+        set => SetValue(IsSingleInstanceProperty, value);
+    }
+
+    public static readonly DependencyProperty IsSingleInstanceProperty =
+        DependencyProperty.Register(nameof(IsSingleInstance), typeof(bool), typeof(UctVirtualDesktopWindow),
+            new PropertyMetadata(false));
+
+    public string? AppKey
+    {
+        get => (string?)GetValue(AppKeyProperty);
+        set => SetValue(AppKeyProperty, value);
+    }
+
+    public static readonly DependencyProperty AppKeyProperty =
+        DependencyProperty.Register(nameof(AppKey), typeof(string), typeof(UctVirtualDesktopWindow),
+            new PropertyMetadata(null));
+
     protected override int VisualChildrenCount => 1;
 
     public object Content
@@ -158,7 +180,7 @@ public class UctVirtualDesktopApplicationPanel : Control
     }
 
     public static readonly DependencyProperty ContentProperty =
-        DependencyProperty.Register(nameof(Content), typeof(object), typeof(UctVirtualDesktopApplicationPanel),
+        DependencyProperty.Register(nameof(Content), typeof(object), typeof(UctVirtualDesktopWindow),
             new PropertyMetadata(null));
 
     public DataTemplate CloseButtonTemplate
@@ -169,7 +191,7 @@ public class UctVirtualDesktopApplicationPanel : Control
 
     public static readonly DependencyProperty CloseButtonTemplateProperty =
         DependencyProperty.Register(nameof(CloseButtonTemplate), typeof(DataTemplate),
-            typeof(UctVirtualDesktopApplicationPanel),
+            typeof(UctVirtualDesktopWindow),
             new PropertyMetadata(null));
 
     public DataTemplate MaximizedButtonTemplate
@@ -180,7 +202,7 @@ public class UctVirtualDesktopApplicationPanel : Control
 
     public static readonly DependencyProperty MaximizedButtonTemplateProperty =
         DependencyProperty.Register(nameof(MaximizedButtonTemplate), typeof(DataTemplate),
-            typeof(UctVirtualDesktopApplicationPanel), new PropertyMetadata(null));
+            typeof(UctVirtualDesktopWindow), new PropertyMetadata(null));
 
     public DataTemplate MinimizedButtonTemplate
     {
@@ -190,7 +212,7 @@ public class UctVirtualDesktopApplicationPanel : Control
 
     public static readonly DependencyProperty MinimizedButtonTemplateProperty =
         DependencyProperty.Register(nameof(MinimizedButtonTemplate), typeof(DataTemplate),
-            typeof(UctVirtualDesktopApplicationPanel), new PropertyMetadata(null));
+            typeof(UctVirtualDesktopWindow), new PropertyMetadata(null));
 
     public DataTemplate Icon
     {
@@ -199,7 +221,7 @@ public class UctVirtualDesktopApplicationPanel : Control
     }
 
     public static readonly DependencyProperty IconProperty =
-        DependencyProperty.Register(nameof(Icon), typeof(DataTemplate), typeof(UctVirtualDesktopApplicationPanel),
+        DependencyProperty.Register(nameof(Icon), typeof(DataTemplate), typeof(UctVirtualDesktopWindow),
             new PropertyMetadata(null));
 
     public string ApplicationTitle
@@ -209,7 +231,7 @@ public class UctVirtualDesktopApplicationPanel : Control
     }
 
     public static readonly DependencyProperty ApplicationTitleProperty =
-        DependencyProperty.Register(nameof(ApplicationTitle), typeof(string), typeof(UctVirtualDesktopApplicationPanel),
+        DependencyProperty.Register(nameof(ApplicationTitle), typeof(string), typeof(UctVirtualDesktopWindow),
             new PropertyMetadata(null));
 
     public Brush ContentBackground
@@ -219,7 +241,7 @@ public class UctVirtualDesktopApplicationPanel : Control
     }
 
     public static readonly DependencyProperty ContentBackgroundProperty =
-        DependencyProperty.Register(nameof(ContentBackground), typeof(Brush), typeof(UctVirtualDesktopApplicationPanel),
+        DependencyProperty.Register(nameof(ContentBackground), typeof(Brush), typeof(UctVirtualDesktopWindow),
             new PropertyMetadata(Brushes.Transparent));
 
     public Brush HeaderButtonHighlightBackground
@@ -230,7 +252,7 @@ public class UctVirtualDesktopApplicationPanel : Control
 
     public static readonly DependencyProperty HeaderButtonHighlightBackgroundProperty =
         DependencyProperty.Register(nameof(HeaderButtonHighlightBackground), typeof(Brush),
-            typeof(UctVirtualDesktopApplicationPanel), new PropertyMetadata(Brushes.SkyBlue));
+            typeof(UctVirtualDesktopWindow), new PropertyMetadata(Brushes.SkyBlue));
 
     public bool IsMaximized
     {
@@ -239,12 +261,12 @@ public class UctVirtualDesktopApplicationPanel : Control
     }
 
     public static readonly DependencyProperty IsMaximizedProperty =
-        DependencyProperty.Register(nameof(IsMaximized), typeof(bool), typeof(UctVirtualDesktopApplicationPanel),
+        DependencyProperty.Register(nameof(IsMaximized), typeof(bool), typeof(UctVirtualDesktopWindow),
             new PropertyMetadata(false, OnIsMaximizedChanged));
 
     private static void OnIsMaximizedChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
     {
-        var snd = sender as UctVirtualDesktopApplicationPanel;
+        var snd = sender as UctVirtualDesktopWindow;
         snd.SetSizes();
     }
 
@@ -255,12 +277,12 @@ public class UctVirtualDesktopApplicationPanel : Control
     }
 
     public static readonly DependencyProperty DesiredWidthProperty =
-        DependencyProperty.Register(nameof(DesiredWidth), typeof(double), typeof(UctVirtualDesktopApplicationPanel),
+        DependencyProperty.Register(nameof(DesiredWidth), typeof(double), typeof(UctVirtualDesktopWindow),
             new PropertyMetadata(double.NaN, OnDesiredWidthChanged));
 
     private static void OnDesiredWidthChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
     {
-        var snd = sender as UctVirtualDesktopApplicationPanel;
+        var snd = sender as UctVirtualDesktopWindow;
         snd.SetSizes();
     }
 
@@ -271,12 +293,12 @@ public class UctVirtualDesktopApplicationPanel : Control
     }
 
     public static readonly DependencyProperty DesiredHeightProperty =
-        DependencyProperty.Register(nameof(DesiredHeight), typeof(double), typeof(UctVirtualDesktopApplicationPanel),
+        DependencyProperty.Register(nameof(DesiredHeight), typeof(double), typeof(UctVirtualDesktopWindow),
             new PropertyMetadata(double.NaN, OnDesiredHeightChanged));
 
     private static void OnDesiredHeightChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
     {
-        var snd = sender as UctVirtualDesktopApplicationPanel;
+        var snd = sender as UctVirtualDesktopWindow;
         snd.SetSizes();
     }
 
@@ -287,12 +309,12 @@ public class UctVirtualDesktopApplicationPanel : Control
     }
 
     public static readonly DependencyProperty DesiredMarginProperty =
-        DependencyProperty.Register(nameof(DesiredMargin), typeof(Thickness), typeof(UctVirtualDesktopApplicationPanel),
+        DependencyProperty.Register(nameof(DesiredMargin), typeof(Thickness), typeof(UctVirtualDesktopWindow),
             new PropertyMetadata(new Thickness(0), OnDesiredMarginChanged));
 
     private static void OnDesiredMarginChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
     {
-        var snd = sender as UctVirtualDesktopApplicationPanel;
+        var snd = sender as UctVirtualDesktopWindow;
         snd.SetSizes();
     }
 
@@ -301,6 +323,13 @@ public class UctVirtualDesktopApplicationPanel : Control
     //      methods
     //
     //--------------------------
+
+    public void Show()
+    {
+        if (UctVirtualDesktop._currentDesktop == null)
+            throw new InvalidOperationException("Cannot create a new Window without the Virtual Desktop");
+        UctVirtualDesktop._currentDesktop.ShowWindow(this);
+    }
 
     protected override Visual GetVisualChild(int index) => _brdMainFrame;
 

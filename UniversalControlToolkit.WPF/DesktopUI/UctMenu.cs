@@ -18,8 +18,6 @@ public class UctMenu : Control
     //
     //--------------------------
 
-    public event EventHandler<ModuleDefinitionClickedEventArgs>? ModuleDefinitionClicked;
-
     private readonly StackPanel _itemHost;
     private readonly CtkMenuItemCollection _items;
 
@@ -94,11 +92,6 @@ public class UctMenu : Control
 
     protected override Visual GetVisualChild(int index) => _itemHost;
 
-    private void ItemModuleDefinitionClicked(object? sender, ModuleDefinitionClickedEventArgs e)
-    {
-        ModuleDefinitionClicked?.Invoke(sender, e);
-    }
-
     private UctMenuItem SetBindings(UctMenuItem menuItem)
     {
         menuItem.SetBinding(UctMenuItem.RowHeightProperty, new Binding(nameof(RowHeight)) { Source = this });
@@ -137,7 +130,6 @@ public class UctMenu : Control
                 foreach (var item in addedItems.Keys.OrderBy(it => it))
                 {
                     _itemHost.Children.Insert(item, SetBindings(addedItems[item]));
-                    addedItems[item].ModuleDefinitionClicked += ItemModuleDefinitionClicked;
                 }
 
                 break;
@@ -146,7 +138,6 @@ public class UctMenu : Control
                     foreach (UctMenuItem item in e.OldItems)
                     {
                         _itemHost.Children.Remove(ClearBindings(item));
-                        item.ModuleDefinitionClicked -= ItemModuleDefinitionClicked;
                     }
 
                 break;
@@ -155,7 +146,6 @@ public class UctMenu : Control
                     foreach (UctMenuItem item in e.OldItems)
                     {
                         _itemHost.Children.Remove(ClearBindings(item));
-                        item.ModuleDefinitionClicked -= ItemModuleDefinitionClicked;
                     }
 
                 addedItems = new Dictionary<int, UctMenuItem>();
@@ -165,21 +155,16 @@ public class UctMenu : Control
                 foreach (var item in addedItems.Keys.OrderBy(it => it))
                 {
                     _itemHost.Children.Insert(item, SetBindings(addedItems[item]));
-                    addedItems[item].ModuleDefinitionClicked += ItemModuleDefinitionClicked;
                 }
 
                 break;
             case NotifyCollectionChangedAction.Move:
             case NotifyCollectionChangedAction.Reset:
-                foreach (UIElement item in _itemHost.Children)
-                    if (item is UctMenuItem cmi)
-                        ClearBindings(cmi).ModuleDefinitionClicked -= ItemModuleDefinitionClicked;
                 _itemHost.Children.Clear();
                 for (int i = 0; i < _items.Count; i++)
                 {
                     var item = SetBindings(_items[i]);
                     _itemHost.Children.Add(item);
-                    item.ModuleDefinitionClicked += ItemModuleDefinitionClicked;
                 }
 
                 break;

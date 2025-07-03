@@ -9,6 +9,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using UniversalControlToolkit.WPF.DesktopUI.Utils;
+using UniversalControlToolkit.WPF.Test.SubAppWindows;
 using UniversalControlToolkit.WPF.Test.Views;
 
 namespace UniversalControlToolkit.WPF.Test;
@@ -23,25 +24,25 @@ public partial class MainWindow : Window
         InitializeComponent();
     }
 
-    private void App1_OnModuleCreateRequest(object? sender, UctModuleCreateEventArgs e)
-    {
-        e.ModuleUI = new TextBlock()
-        {
-            VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center,
-            FontSize = 40, Text = "APP 1"
-        };
-        e.Handled = true;
-    }
-
-    private void App2_OnModuleCreateRequest(object? sender, UctModuleCreateEventArgs e)
-    {
-        e.ModuleUI = new TextBlock()
-        {
-            VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center,
-            FontSize = 40, Text = "APP 2"
-        };
-        e.Handled = true;
-    }
+    // private void App1_OnModuleCreateRequest(object? sender, UctModuleCreateEventArgs e)
+    // {
+    //     e.ModuleUI = new TextBlock()
+    //     {
+    //         VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center,
+    //         FontSize = 40, Text = "APP 1"
+    //     };
+    //     e.Handled = true;
+    // }
+    //
+    // private void App2_OnModuleCreateRequest(object? sender, UctModuleCreateEventArgs e)
+    // {
+    //     e.ModuleUI = new TextBlock()
+    //     {
+    //         VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center,
+    //         FontSize = 40, Text = "APP 2"
+    //     };
+    //     e.Handled = true;
+    // }
 
     private void BtnSelectTheme_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
@@ -53,9 +54,8 @@ public partial class MainWindow : Window
         App.Current.Shutdown(0);
     }
 
-    private void UctModuleDefinition_OnModuleCreateRequest(object? sender, UctModuleCreateEventArgs e)
+    private void App1_OnClicked(object? sender, EventArgs e)
     {
-        e.ModuleUI = new StyleTestView();
-        e.Handled = true;
+        (new App1Window()).Show();
     }
 }

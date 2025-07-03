@@ -20,6 +20,8 @@ public class UctVirtualDesktop : Control
     //
     //--------------------------
 
+    [ThreadStatic] internal static UctVirtualDesktop? _currentDesktop;
+
     private readonly Grid _gridHost, _gridTaskbar, _gridTaskbarMenu, _gridContent;
     private readonly ContentPresenter _cpStartButton;
     private readonly StackPanel _applicationPanel;
@@ -46,6 +48,9 @@ public class UctVirtualDesktop : Control
 
     public UctVirtualDesktop()
     {
+        if (_currentDesktop != null)
+            throw new InvalidOperationException("Cannot create a new UCTVirtualDesktop instance more than once.");
+        _currentDesktop = this;
         _runningAppInfos = new List<RunningAppInfo>();
 
         ColumnDefinition cDefRight;
@@ -188,7 +193,6 @@ public class UctVirtualDesktop : Control
         _taskbarMenu = new UctMenu();
         _taskbarMenu.SetResourceReference(UctMenu.ForegroundProperty, "UctTaskmenuForegroundColor");
         _taskbarMenu.SetResourceReference(UctMenu.HighlightBackgroundProperty, "UctTaskmenuHighlightedColor");
-        _taskbarMenu.ModuleDefinitionClicked += TaskbarMenu_OnModuleDefinitionClicked;
         ScrollViewer scrv = new ScrollViewer()
         {
             VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
@@ -251,10 +255,10 @@ public class UctVirtualDesktop : Control
         DependencyProperty.RegisterAttached("AppInfo", typeof(RunningAppInfo), typeof(UctVirtualDesktop),
             new PropertyMetadata(defaultValue: null));
 
-    public static RunningAppInfo GetAppInfo(UctVirtualDesktopApplicationPanel target) =>
+    public static RunningAppInfo GetAppInfo(UctVirtualDesktopWindow target) =>
         (RunningAppInfo)target.GetValue(AppInfoProperty);
 
-    public static void SetAppInfo(UctVirtualDesktopApplicationPanel target, RunningAppInfo value) =>
+    public static void SetAppInfo(UctVirtualDesktopWindow target, RunningAppInfo value) =>
         target.SetValue(AppInfoProperty, value);
 
     protected override int VisualChildrenCount => 1;
@@ -421,6 +425,34 @@ public class UctVirtualDesktop : Control
     //
     //--------------------------
 
+    internal void ShowWindow(UctVirtualDesktopWindow window)
+    {
+        _brdModal.Visibility = _brdTaskbarMenu.Visibility = Visibility.Collapsed;
+        if (window.IsSingleInstance && !string.IsNullOrWhiteSpace(window.AppKey) &&
+            _runningAppInfos.Any(it => it.Window.AppKey == window.AppKey))
+        {
+            var app = _runningAppInfos.First(it => it.Window.AppKey == window.AppKey);
+            LaunchOrResumeApplication(app);
+            return;
+        }
+
+        var appButton = new UctImageButton()
+        {
+            ContentTemplate = window.Icon ?? DefaultAppIcon, ToolTip = window.ApplicationTitle
+        };
+        appButton.SetBinding(UctImageButton.HeightProperty, new Binding(nameof(TaskbarSize)) { Source = this });
+        appButton.SetBinding(UctImageButton.WidthProperty, new Binding(nameof(TaskbarSize)) { Source = this });
+        appButton.SetResourceReference(UctImageButton.HighlightBackgroundProperty, "UctTaskbarHighlightedColor");
+        appButton.SetResourceReference(UctImageButton.SelectedBackgroundProperty, "UctTaskbarSelectedColor");
+        appButton.MouseLeftButtonDown += AppButton_OnMouseLeftButtonDown;
+        RunningAppInfo newApp = new RunningAppInfo()
+        {
+            Window = window,
+            AppButton = appButton,
+        };
+        LaunchOrResumeApplication(newApp);
+    }
+
     protected override Visual GetVisualChild(int index)
     {
         return _gridHost;
@@ -497,55 +529,42 @@ public class UctVirtualDesktop : Control
 
         if (isNew)
         {
-            UctVirtualDesktopApplicationPanel appPanel = new UctVirtualDesktopApplicationPanel()
-            {
-                Content = appInfo.InstancedUI,
-                IsMaximized = appInfo.ModuleDefinition.IsMaximized,
-                DesiredWidth = appInfo.ModuleDefinition.DesiredWidth,
-                DesiredHeight = appInfo.ModuleDefinition.DesiredHeight,
-                DesiredMargin = appInfo.ModuleDefinition.DesiredMargin
-            };
-            appPanel.SetResourceReference(UctVirtualDesktopApplicationPanel.BackgroundProperty,
+            appInfo.Window.SetResourceReference(UctVirtualDesktopWindow.BackgroundProperty,
                 "UctWindowBackgroundColor");
-            appPanel.SetResourceReference(UctVirtualDesktopApplicationPanel.ContentBackgroundProperty,
+            appInfo.Window.SetResourceReference(UctVirtualDesktopWindow.ContentBackgroundProperty,
                 "UctDefaultBackgroundColor");
-            appPanel.SetBinding(UctVirtualDesktopApplicationPanel.MinimizedButtonTemplateProperty,
+            appInfo.Window.SetBinding(UctVirtualDesktopWindow.MinimizedButtonTemplateProperty,
                 new Binding(nameof(MinimizedButtonTemplate)) { Source = this });
-            appPanel.SetBinding(UctVirtualDesktopApplicationPanel.MaximizedButtonTemplateProperty,
+            appInfo.Window.SetBinding(UctVirtualDesktopWindow.MaximizedButtonTemplateProperty,
                 new Binding(nameof(MaximizedButtonTemplate)) { Source = this });
-            appPanel.SetBinding(UctVirtualDesktopApplicationPanel.CloseButtonTemplateProperty,
+            appInfo.Window.SetBinding(UctVirtualDesktopWindow.CloseButtonTemplateProperty,
                 new Binding(nameof(CloseButtonTemplate)) { Source = this });
-            appPanel.SetResourceReference(UctVirtualDesktopApplicationPanel.HeaderButtonHighlightBackgroundProperty,
+            appInfo.Window.SetResourceReference(UctVirtualDesktopWindow.HeaderButtonHighlightBackgroundProperty,
                 "UctTaskbarHighlightedColor");
-            appPanel.SetBinding(UctVirtualDesktopApplicationPanel.IconProperty,
-                new Binding(nameof(RunningAppInfo.ModuleDefinition.Icon)) { Source = appInfo.ModuleDefinition });
-            appPanel.SetBinding(UctVirtualDesktopApplicationPanel.ApplicationTitleProperty,
-                new Binding(nameof(RunningAppInfo.ModuleDefinition.AppName)) { Source = appInfo.ModuleDefinition });
-            appPanel.SetResourceReference(UctVirtualDesktopApplicationPanel.ForegroundProperty,
+            appInfo.Window.SetResourceReference(UctVirtualDesktopWindow.ForegroundProperty,
                 "UctCommonForegroundColor");
-            SetAppInfo(appPanel, appInfo);
-            appPanel.CloseRequested += (sender, args) =>
-                CloseApplication(GetAppInfo(sender as UctVirtualDesktopApplicationPanel));
-            appPanel.MinimizeRequested += (sender, args) =>
-                MinimizeApplication(GetAppInfo(sender as UctVirtualDesktopApplicationPanel));
-            appPanel.MaximizeRequested += (sender, args) =>
-                ToogleApplicationMaximize(GetAppInfo(sender as UctVirtualDesktopApplicationPanel));
-            appPanel.Activated += (sender, args) =>
-                ActivateApplication(GetAppInfo(sender as UctVirtualDesktopApplicationPanel));
-            appPanel.GlobalMouseOperationStarted += (sender, args) =>
+            SetAppInfo(appInfo.Window, appInfo);
+            appInfo.Window.CloseRequested += (sender, args) =>
+                CloseApplication(GetAppInfo(sender as UctVirtualDesktopWindow));
+            appInfo.Window.MinimizeRequested += (sender, args) =>
+                MinimizeApplication(GetAppInfo(sender as UctVirtualDesktopWindow));
+            appInfo.Window.MaximizeRequested += (sender, args) =>
+                ToogleApplicationMaximize(GetAppInfo(sender as UctVirtualDesktopWindow));
+            appInfo.Window.Activated += (sender, args) =>
+                ActivateApplication(GetAppInfo(sender as UctVirtualDesktopWindow));
+            appInfo.Window.GlobalMouseOperationStarted += (sender, args) =>
             {
                 _brdGlobalMouseActions.IsHitTestVisible = true;
                 _brdGlobalMouseActions.Cursor = args.DesiredCursor;
                 args.MouseHost = _brdGlobalMouseActions;
                 args.Handled = true;
             };
-            appPanel.GlobalMouseOperationFinished += (sender, args) =>
+            appInfo.Window.GlobalMouseOperationFinished += (sender, args) =>
             {
                 _brdGlobalMouseActions.IsHitTestVisible = false;
                 _brdGlobalMouseActions.Cursor = null;
             };
-            _gridContent.Children.Add(appPanel);
-            appInfo.Panel = appPanel;
+            _gridContent.Children.Add(appInfo.Window);
         }
 
         ActivateApplication(appInfo);
@@ -555,17 +574,17 @@ public class UctVirtualDesktop : Control
     {
         foreach (UIElement item in _gridContent.Children)
         {
-            if (item is UctVirtualDesktopApplicationPanel panel)
+            if (item is UctVirtualDesktopWindow window)
             {
-                if (panel.Content == appInfo.InstancedUI)
+                if (window == appInfo.Window)
                 {
                     if (item.Visibility != Visibility.Visible)
                         item.Visibility = Visibility.Visible;
-                    Grid.SetZIndex(panel, 2);
+                    Grid.SetZIndex(window, 2);
                 }
                 else
                 {
-                    Grid.SetZIndex(panel, 1);
+                    Grid.SetZIndex(window, 1);
                 }
             }
         }
@@ -578,14 +597,14 @@ public class UctVirtualDesktop : Control
 
     private void MinimizeApplication(RunningAppInfo? appInfo)
     {
-        if (appInfo?.Panel != null)
-            appInfo.Panel.Visibility = Visibility.Collapsed;
+        if (appInfo?.Window != null)
+            appInfo.Window.Visibility = Visibility.Collapsed;
     }
 
     private void ToogleApplicationMaximize(RunningAppInfo? appInfo)
     {
-        if (appInfo.Panel != null)
-            appInfo.Panel.IsMaximized = !appInfo.Panel.IsMaximized;
+        if (appInfo.Window != null)
+            appInfo.Window.IsMaximized = !appInfo.Window.IsMaximized;
     }
 
     private void CloseApplication(RunningAppInfo? appInfo)
@@ -595,7 +614,7 @@ public class UctVirtualDesktop : Control
             UIElement? removePanel = null;
             foreach (UIElement item in _gridContent.Children)
             {
-                if (item is UctVirtualDesktopApplicationPanel panel && panel.Content == appInfo.InstancedUI)
+                if (item is UctVirtualDesktopWindow window && window == appInfo.Window)
                 {
                     removePanel = item;
                     break;
@@ -625,36 +644,6 @@ public class UctVirtualDesktop : Control
     private void BrdModal_OnMouseDown(object sender, MouseButtonEventArgs e)
     {
         _brdModal.Visibility = _brdTaskbarMenu.Visibility = Visibility.Collapsed;
-    }
-
-    private void TaskbarMenu_OnModuleDefinitionClicked(object? sender, ModuleDefinitionClickedEventArgs e)
-    {
-        _brdModal.Visibility = _brdTaskbarMenu.Visibility = Visibility.Collapsed;
-        if (e.ModuleDefinition.MaxInstances > 0 &&
-            _runningAppInfos.Count(it => it.ModuleDefinition == e.ModuleDefinition) >= e.ModuleDefinition.MaxInstances)
-        {
-            var app = _runningAppInfos.FirstOrDefault(it => it.ModuleDefinition == e.ModuleDefinition);
-            if (app != null)
-                LaunchOrResumeApplication(app);
-            return;
-        }
-
-        var appButton = new UctImageButton()
-        {
-            ContentTemplate = e.ModuleDefinition.Icon ?? DefaultAppIcon, ToolTip = e.ModuleDefinition.AppName
-        };
-        appButton.SetBinding(UctImageButton.HeightProperty, new Binding(nameof(TaskbarSize)) { Source = this });
-        appButton.SetBinding(UctImageButton.WidthProperty, new Binding(nameof(TaskbarSize)) { Source = this });
-        appButton.SetResourceReference(UctImageButton.HighlightBackgroundProperty, "UctTaskbarHighlightedColor");
-        appButton.SetResourceReference(UctImageButton.SelectedBackgroundProperty, "UctTaskbarSelectedColor");
-        appButton.MouseLeftButtonDown += AppButton_OnMouseLeftButtonDown;
-        RunningAppInfo newApp = new RunningAppInfo()
-        {
-            ModuleDefinition = e.ModuleDefinition,
-            InstancedUI = e.ModuleDefinition.GetModuleUI(),
-            AppButton = appButton,
-        };
-        LaunchOrResumeApplication(newApp);
     }
 
     private void AppButton_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -706,13 +695,9 @@ public class UctVirtualDesktop : Control
 
     public class RunningAppInfo
     {
-        public UctModuleDefinition ModuleDefinition { get; set; }
-
-        public UIElement InstancedUI { get; set; }
+        public UctVirtualDesktopWindow Window { get; set; }
 
         public UctImageButton AppButton { get; set; }
-
-        public UctVirtualDesktopApplicationPanel Panel { get; set; }
     }
 }
 

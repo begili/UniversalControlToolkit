@@ -20,7 +20,7 @@ public class UctMenuItem : Control
     //
     //--------------------------
 
-    public event EventHandler<ModuleDefinitionClickedEventArgs>? ModuleDefinitionClicked;
+    public event EventHandler? Clicked;
 
     private readonly Grid _grdHost;
     private readonly UctMenu _childMenu;
@@ -104,7 +104,6 @@ public class UctMenuItem : Control
             new Binding(nameof(HighlightBackground)) { Source = this });
         Grid.SetColumnSpan(_childMenu, 2);
         Grid.SetRow(_childMenu, 1);
-        _childMenu.ModuleDefinitionClicked += ChildMenu_OnModuleDefinitionClicked;
         _grdHost.Children.Add(_childMenu);
         AddVisualChild(_grdHost);
     }
@@ -154,16 +153,6 @@ public class UctMenuItem : Control
     public static readonly DependencyProperty ContentProperty =
         DependencyProperty.Register(nameof(Content), typeof(object), typeof(UctMenuItem), new PropertyMetadata(null));
 
-    public UctModuleDefinition? ModuleDefinition
-    {
-        get => (UctModuleDefinition?)GetValue(ModuleDefinitionProperty);
-        set => SetValue(ModuleDefinitionProperty, value);
-    }
-
-    public static readonly DependencyProperty ModuleDefinitionProperty =
-        DependencyProperty.Register(nameof(ModuleDefinition), typeof(UctModuleDefinition), typeof(UctMenuItem),
-            new PropertyMetadata(null));
-
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
     public CtkMenuItemCollection Children => _children;
 
@@ -209,11 +198,7 @@ public class UctMenuItem : Control
     {
         if (Children.Count > 0)
             IsExpanded = !IsExpanded;
-        else if (ModuleDefinition != null)
-        {
-            ModuleDefinitionClicked?.Invoke(this,
-                new ModuleDefinitionClickedEventArgs(ModuleDefinition));
-        }
+        Clicked?.Invoke(this, EventArgs.Empty);
 
         e.Handled = true;
     }
@@ -294,11 +279,6 @@ public class UctMenuItem : Control
         _brdHightlight.Background = Brushes.Transparent;
     }
 
-    private void ChildMenu_OnModuleDefinitionClicked(object? sender, ModuleDefinitionClickedEventArgs e)
-    {
-        ModuleDefinitionClicked?.Invoke(sender, e);
-    }
-
     //--------------------------
     //
     //      classes
@@ -334,14 +314,4 @@ public class UctMenuItem : Control
             throw new NotSupportedException();
         }
     }
-}
-
-public class ModuleDefinitionClickedEventArgs : EventArgs
-{
-    public ModuleDefinitionClickedEventArgs(UctModuleDefinition moduleDefinition)
-    {
-        ModuleDefinition = moduleDefinition;
-    }
-
-    public UctModuleDefinition ModuleDefinition { get; set; }
 }

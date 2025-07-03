@@ -45,27 +45,11 @@
             </TextBlock>
         </desktopUi:UctVirtualDesktop.StartButtonContent>
         <desktopUi:UctVirtualDesktop.MenuItems>
-            <desktopUi:UctMenuItem Content="App1" AppIcon="{StaticResource appIcon1}">
-                <desktopUi:UctMenuItem.ModuleDefinition>
-                    <utils:UctModuleDefinition ModuleCreateRequest="App1_OnModuleCreateRequest"
-                                               Icon="{StaticResource appIcon1}" AppName="App1"
-                                               MaxInstances="1" DesiredHeight="350" DesiredWidth="500"
-                                               DesiredMargin="100,100,0,0" IsMaximized="False" />
-                </desktopUi:UctMenuItem.ModuleDefinition>
+            <desktopUi:UctMenuItem Content="App1" AppIcon="{StaticResource appIcon1}" Clicked="App1_OnClicked">
             </desktopUi:UctMenuItem>
             <desktopUi:UctMenuItem Content="App2" AppIcon="{StaticResource appIcon2}">
-                <desktopUi:UctMenuItem.ModuleDefinition>
-                    <utils:UctModuleDefinition ModuleCreateRequest="App2_OnModuleCreateRequest"
-                                               Icon="{StaticResource appIcon2}" AppName="App2"
-                                               MaxInstances="1" IsMaximized="True" />
-                </desktopUi:UctMenuItem.ModuleDefinition>
             </desktopUi:UctMenuItem>
             <desktopUi:UctMenuItem Content="Style Test" AppIcon="{StaticResource appIconStyleTest}">
-                <desktopUi:UctMenuItem.ModuleDefinition>
-                    <utils:UctModuleDefinition ModuleCreateRequest="UctModuleDefinition_OnModuleCreateRequest"
-                                               Icon="{StaticResource appIconStyleTest}" AppName="Style Test"
-                                               DesiredWidth="450" DesiredHeight="800" />
-                </desktopUi:UctMenuItem.ModuleDefinition>
             </desktopUi:UctMenuItem>
         </desktopUi:UctVirtualDesktop.MenuItems>
         <desktopUi:UctVirtualDesktop.MenuFooterContent>
