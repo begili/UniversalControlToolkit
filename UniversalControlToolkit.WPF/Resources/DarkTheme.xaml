@@ -10,6 +10,7 @@
     <SolidColorBrush x:Key="UctDefaultBackgroundColor" Color="#FF232323"></SolidColorBrush>
     <SolidColorBrush x:Key="UctCommonForegroundColor" Color="#FFD0D0D0"></SolidColorBrush>
     <SolidColorBrush x:Key="UctWindowBackgroundColor" Color="#FF484848"></SolidColorBrush>
+    <SolidColorBrush x:Key="UctModalBackgroundColor" Color="#80FFFFFF"></SolidColorBrush>
 
     <Style TargetType="ToolTip">
         <Setter Property="Background" Value="{DynamicResource UctTaskmenuBackgroundColor}"></Setter>

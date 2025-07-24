@@ -5,6 +5,7 @@
                                    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                                    xmlns:local="clr-namespace:UniversalControlToolkit.WPF.Test.SubAppWindows"
                                    xmlns:desktopUi="clr-namespace:UniversalControlToolkit.WPF.DesktopUI;assembly=UniversalControlToolkit.WPF"
+                                   xmlns:modal="clr-namespace:UniversalControlToolkit.WPF.DesktopUI.Modal;assembly=UniversalControlToolkit.WPF"
                                    mc:Ignorable="d"
                                    DesiredHeight="300" DesiredWidth="300"
                                    Margin="100,100,0,0"
@@ -12,5 +13,9 @@
                                    ApplicationTitle="App 1" AppKey="APP1">
     <Grid>
         <TextBlock Text="App 1" VerticalAlignment="Center" TextAlignment="Center" FontSize="20" FontWeight="Bold"></TextBlock>
+        <Button VerticalAlignment="Center" Content="test" Click="ButtonBase_OnClick" />
+        <modal:UctModal x:Name="modalTest" DesiredSizeRatio="0.75">
+            <TextBlock Text="hello modal"></TextBlock>
+        </modal:UctModal>
     </Grid>
 </desktopUi:UctVirtualDesktopWindow>
