@@ -24,6 +24,7 @@ public class UctModal : Control
     private static readonly Brush _modalBackgroundBrush;
 
     private readonly Border _brdModalWindow;
+    private readonly ContentPresenter _contentPresenter;
     private Border? _partModalBackground;
     private bool _needsResize = false;
     private bool _hasFadedOut = true;
@@ -88,12 +89,11 @@ public class UctModal : Control
         btnClose.MouseLeftButtonDown += (sender, args) => Visibility = Visibility.Collapsed;
         grdContent.Children.Add(btnClose);
 
-        ContentPresenter cp = new ContentPresenter();
-        cp.SetBinding(ContentPresenter.ContentProperty, new Binding(nameof(Content)) { Source = this });
+        _contentPresenter = new ContentPresenter();
         Border brdContentBackground = new Border()
         {
             Margin = new Thickness(5),
-            Child = cp
+            Child = _contentPresenter
         };
         brdContentBackground.SetBinding(Border.BackgroundProperty,
             new Binding(nameof(ContentBackground)) { Source = this });
@@ -175,7 +175,26 @@ public class UctModal : Control
     }
 
     public static readonly DependencyProperty ContentProperty =
-        DependencyProperty.Register(nameof(Content), typeof(object), typeof(UctModal), new PropertyMetadata(null));
+        DependencyProperty.Register(nameof(Content), typeof(object), typeof(UctModal),
+            new PropertyMetadata(null, ContentChanged));
+
+    private static void ContentChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is UctModal modal)
+        {
+            if (modal._partModalBackground != null)
+            {
+                modal._contentPresenter.Content = e.NewValue;
+            }
+            else
+            {
+                if (e.OldValue != null)
+                    modal.RemoveLogicalChild(e.OldValue);
+                if (e.NewValue != null)
+                    modal.AddLogicalChild(e.NewValue);
+            }
+        }
+    }
 
     public string Title
     {
@@ -200,12 +219,20 @@ public class UctModal : Control
             _partModalBackground.Child = null;
             BindingOperations.ClearBinding(_partModalBackground, Border.BackgroundProperty);
             _partModalBackground.SizeChanged -= OnSizeChanged;
+            _contentPresenter.Content = null;
+            if (Content != null)
+                AddLogicalChild(Content);
         }
 
         _partModalBackground = GetTemplateChild("PART_ModalBackground") as Border;
 
         if (_partModalBackground != null)
         {
+            if (Content != null)
+            {
+                RemoveLogicalChild(Content);
+                _contentPresenter.Content = Content;
+            }
             _partModalBackground.Child = _brdModalWindow;
             _partModalBackground.IsHitTestVisible = true;
             _partModalBackground.SetBinding(Border.BackgroundProperty,
