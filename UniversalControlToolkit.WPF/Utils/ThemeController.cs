@@ -30,14 +30,14 @@ public static class ThemeController
         }
 
         var contents = _sThemeResources[themeName];
+        List<ResourceDictionary> loadedResources = new List<ResourceDictionary>();
         var uri = new Uri(
             $"pack://application:,,,/UniversalControlToolkit.WPF;component/Resources/{(contents.Item1 ? "DarkTheme.xaml" : "LightTheme.xaml")}",
             UriKind.Absolute);
-        List<ResourceDictionary> loadedResources = new List<ResourceDictionary>();
-
-        ResourceDictionary defResDict = new ResourceDictionary() { Source = uri };
-        loadedResources.Add(defResDict);
-        Application.Current.Resources.MergedDictionaries.Add(defResDict);
+        AddPredefinedTheme(uri, loadedResources);
+        AddPredefinedTheme(
+            new Uri("pack://application:,,,/UniversalControlToolkit.WPF;component/Resources/CommonTheme.xaml",
+                UriKind.Absolute), loadedResources);
 
         if (contents.Item2 != null)
         {
@@ -45,11 +45,18 @@ public static class ThemeController
             {
                 ResourceDictionary resDict = new ResourceDictionary() { Source = resourceDictUri };
                 loadedResources.Add(resDict);
-                Application.Current.Resources.MergedDictionaries.Add(defResDict);
+                Application.Current.Resources.MergedDictionaries.Add(resDict);
             }
         }
 
         _sLoadedResources = loadedResources;
+    }
+
+    private static void AddPredefinedTheme(Uri uri, List<ResourceDictionary> loadedResources)
+    {
+        ResourceDictionary resDict = new ResourceDictionary() { Source = uri };
+        loadedResources.Add(resDict);
+        Application.Current.Resources.MergedDictionaries.Add(resDict);
     }
 
     public static void RegisterTheme(string themeName, bool isDarkMode, IEnumerable<Uri>? resources)

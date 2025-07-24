@@ -1,0 +1,10 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:modal="clr-namespace:UniversalControlToolkit.WPF.DesktopUI.Modal">
+    <Style TargetType="modal:UctModal">
+        <Setter Property="Foreground" Value="{DynamicResource UctCommonForegroundColor}"></Setter>
+        <Setter Property="ContentBackground" Value="{DynamicResource UctDefaultBackgroundColor}"></Setter>
+        <Setter Property="WindowBackground" Value="{DynamicResource UctWindowBackgroundColor}"></Setter>
+        <Setter Property="Background" Value="{DynamicResource UctModalBackgroundColor}"></Setter>
+    </Style>
+</ResourceDictionary>

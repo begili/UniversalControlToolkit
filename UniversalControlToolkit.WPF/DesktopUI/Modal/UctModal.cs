@@ -11,6 +11,7 @@ using UniversalControlToolkit.WPF.DesktopUI.Utils;
 
 namespace UniversalControlToolkit.WPF.DesktopUI.Modal;
 
+[TemplatePart(Name = "PART_ModalBackground", Type = typeof(Border))]
 [ContentProperty(nameof(Content))]
 public class UctModal : Control
 {
@@ -22,7 +23,8 @@ public class UctModal : Control
 
     private static readonly Brush _modalBackgroundBrush;
 
-    private readonly Border _brdModalBackground, _brdModalWindow;
+    private readonly Border _brdModalWindow;
+    private Border? _partModalBackground;
     private bool _needsResize = false;
     private bool _hasFadedOut = true;
     private bool _hasOriginalSize = true;
@@ -43,11 +45,14 @@ public class UctModal : Control
         _modalBackgroundBrush.Freeze();
         VisibilityProperty.OverrideMetadata(typeof(UctModal),
             new FrameworkPropertyMetadata(Visibility.Collapsed, VisibilityChanged, CoerceVisibility));
+        FrameworkElementFactory feModal = new FrameworkElementFactory(typeof(Border), "PART_ModalBackground");
+        ControlTemplate ct = new ControlTemplate(typeof(UctModal)) { VisualTree = feModal };
+        ct.Seal();
+        TemplateProperty.OverrideMetadata(typeof(UctModal), new FrameworkPropertyMetadata(ct));
     }
 
     public UctModal()
     {
-        this.SetResourceReference(Control.ForegroundProperty, "UctCommonForegroundColor");
         Grid grdContent = new Grid()
         {
             HorizontalAlignment = HorizontalAlignment.Stretch,
@@ -90,7 +95,8 @@ public class UctModal : Control
             Margin = new Thickness(5),
             Child = cp
         };
-        brdContentBackground.SetResourceReference(Border.BackgroundProperty, "UctDefaultBackgroundColor");
+        brdContentBackground.SetBinding(Border.BackgroundProperty,
+            new Binding(nameof(ContentBackground)) { Source = this });
         Grid.SetColumnSpan(brdContentBackground, 2);
         Grid.SetRow(brdContentBackground, 1);
         grdContent.Children.Add(brdContentBackground);
@@ -101,18 +107,9 @@ public class UctModal : Control
             HorizontalAlignment = HorizontalAlignment.Left,
             VerticalAlignment = VerticalAlignment.Top
         };
-        _brdModalWindow.SetResourceReference(Border.BackgroundProperty, "UctWindowBackgroundColor");
+        _brdModalWindow.SetBinding(Border.BackgroundProperty, new Binding(nameof(WindowBackground)) { Source = this });
         _brdModalWindow.MouseMove += BrdModalWindowOnMouseMove;
         _brdModalWindow.MouseDown += BrdModalWindowOnMouseDown;
-
-        _brdModalBackground = new Border()
-        {
-            Child = _brdModalWindow,
-            IsHitTestVisible = true
-        };
-        _brdModalBackground.SetResourceReference(Border.BackgroundProperty, "UctModalBackgroundColor");
-        AddLogicalChild(_brdModalBackground);
-        AddVisualChild(_brdModalBackground);
     }
 
     //--------------------------
@@ -121,7 +118,25 @@ public class UctModal : Control
     //
     //--------------------------
 
-    protected override int VisualChildrenCount => 1;
+    public Brush? ContentBackground
+    {
+        get => (Brush?)GetValue(ContentBackgroundProperty);
+        set => SetValue(ContentBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty ContentBackgroundProperty =
+        DependencyProperty.Register(nameof(ContentBackground), typeof(Brush), typeof(UctModal),
+            new PropertyMetadata(null));
+
+    public Brush? WindowBackground
+    {
+        get => (Brush?)GetValue(WindowBackgroundProperty);
+        set => SetValue(WindowBackgroundProperty, value);
+    }
+
+    public static readonly DependencyProperty WindowBackgroundProperty =
+        DependencyProperty.Register(nameof(WindowBackground), typeof(Brush), typeof(UctModal),
+            new PropertyMetadata(null));
 
     public double DesiredHeight
     {
@@ -177,9 +192,33 @@ public class UctModal : Control
     //
     //--------------------------
 
-    protected override Visual? GetVisualChild(int index) => _brdModalBackground;
+    public override void OnApplyTemplate()
+    {
+        base.OnApplyTemplate();
+        if (_partModalBackground != null)
+        {
+            _partModalBackground.Child = null;
+            BindingOperations.ClearBinding(_partModalBackground, Border.BackgroundProperty);
+            _partModalBackground.SizeChanged -= OnSizeChanged;
+        }
 
-    protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
+        _partModalBackground = GetTemplateChild("PART_ModalBackground") as Border;
+
+        if (_partModalBackground != null)
+        {
+            _partModalBackground.Child = _brdModalWindow;
+            _partModalBackground.IsHitTestVisible = true;
+            _partModalBackground.SetBinding(Border.BackgroundProperty,
+                new Binding(nameof(Background)) { Source = this });
+            _partModalBackground.SizeChanged += OnSizeChanged;
+            if (Visibility == Visibility.Visible)
+                ShowModal();
+        }
+
+        _needsResize = ResizeAndCenterModalWindow();
+    }
+
+    private void OnSizeChanged(object sender, SizeChangedEventArgs sizeInfo)
     {
         if (_needsResize && sizeInfo.NewSize.Height > 0 && sizeInfo.NewSize.Width > 0)
         {
@@ -189,7 +228,9 @@ public class UctModal : Control
 
     private void ShowModal()
     {
-        _brdModalBackground.Opacity = 0;
+        if (_partModalBackground == null)
+            return;
+        _partModalBackground.Opacity = 0;
         var fadeIn = new DoubleAnimation
         {
             From = 0,
@@ -200,11 +241,13 @@ public class UctModal : Control
         _hasOriginalSize = true;
         _needsResize = ResizeAndCenterModalWindow();
         _hasFadedOut = false;
-        _brdModalBackground.BeginAnimation(UIElement.OpacityProperty, fadeIn);
+        _partModalBackground.BeginAnimation(UIElement.OpacityProperty, fadeIn);
     }
 
     private void HideModal()
     {
+        if (_partModalBackground == null)
+            return;
         var fadeIn = new DoubleAnimation
         {
             From = 1,
@@ -217,7 +260,7 @@ public class UctModal : Control
             _hasFadedOut = true;
             Visibility = Visibility.Collapsed;
         };
-        _brdModalBackground.BeginAnimation(UIElement.OpacityProperty, fadeIn);
+        _partModalBackground.BeginAnimation(UIElement.OpacityProperty, fadeIn);
     }
 
     /// <summary>
@@ -282,6 +325,8 @@ public class UctModal : Control
 
     private void BrdModalWindowOnMouseMove(object sender, MouseEventArgs e)
     {
+        if (_partModalBackground == null)
+            return;
         var pos = e.GetPosition(_brdModalWindow);
         bool isLeft = pos.X <= 5;
         bool isRight = pos.X >= _brdModalWindow.ActualWidth - 5;
@@ -324,6 +369,8 @@ public class UctModal : Control
 
     private void BrdModalWindowOnMouseDown(object sender, MouseButtonEventArgs e)
     {
+        if (_partModalBackground == null)
+            return;
         var pos = e.GetPosition(_brdModalWindow);
         bool isLeft = pos.X <= 5;
         bool isRight = pos.X >= _brdModalWindow.ActualWidth - 5;
@@ -370,27 +417,28 @@ public class UctModal : Control
         _mouseDownWidth = _brdModalWindow.Width;
         _mouseDownHeight = _brdModalWindow.Height;
         _mouseDownMode = mouseDownMode;
-        _mouseDownPosition = e.GetPosition(_brdModalBackground);
-        _brdModalBackground.Cursor = _brdModalWindow.Cursor;
-        _brdModalBackground.MouseMove += BrdModalBackgroundOnMouseMove;
+        _mouseDownPosition = e.GetPosition(_partModalBackground);
+        _partModalBackground.Cursor = _brdModalWindow.Cursor;
+        _partModalBackground.MouseMove += BrdModalBackgroundOnMouseMove;
         _brdModalWindow.IsHitTestVisible = false;
-        _brdModalBackground.MouseLeave += BrdModalBackgroundOnMouseLeave;
-        _brdModalBackground.MouseUp += BrdModalBackgroundOnMouseUp;
+        _partModalBackground.MouseLeave += BrdModalBackgroundOnMouseLeave;
+        _partModalBackground.MouseUp += BrdModalBackgroundOnMouseUp;
     }
 
     private void BrdModalBackgroundOnMouseMove(object sender, MouseEventArgs e)
     {
-        if (!_mouseDownMode.HasValue || !_mouseDownPosition.HasValue)
+        if (!_mouseDownMode.HasValue || !_mouseDownPosition.HasValue || _partModalBackground == null)
             return;
-        var diff = e.GetPosition(_brdModalBackground) - _mouseDownPosition.Value;
+        var diff = e.GetPosition(_partModalBackground) - _mouseDownPosition.Value;
         switch (_mouseDownMode.Value)
         {
             case MouseDownMode.DragHeader:
                 _brdModalWindow.Margin =
                     new Thickness(
-                        Math.Clamp(_mouseDownLeftMargin + diff.X, 0, _brdModalBackground.ActualWidth - _mouseDownWidth),
+                        Math.Clamp(_mouseDownLeftMargin + diff.X, 0,
+                            _partModalBackground.ActualWidth - _mouseDownWidth),
                         Math.Clamp(_mouseDownTopMargin + diff.Y, 0,
-                            _brdModalBackground.ActualHeight - _mouseDownHeight), 0, 0);
+                            _partModalBackground.ActualHeight - _mouseDownHeight), 0, 0);
                 break;
             case MouseDownMode.ResizeLeft:
                 _brdModalWindow.Margin =
@@ -445,18 +493,22 @@ public class UctModal : Control
 
     private void BrdModalBackgroundOnMouseUp(object sender, MouseButtonEventArgs e)
     {
+        if (_partModalBackground == null)
+            return;
         _mouseDownMode = null;
         _mouseDownPosition = null;
         _brdModalWindow.IsHitTestVisible = true;
-        _brdModalBackground.Cursor = Cursors.Arrow;
+        _partModalBackground.Cursor = Cursors.Arrow;
     }
 
     private void BrdModalBackgroundOnMouseLeave(object sender, MouseEventArgs e)
     {
+        if (_partModalBackground == null)
+            return;
         _mouseDownMode = null;
         _mouseDownPosition = null;
         _brdModalWindow.IsHitTestVisible = true;
-        _brdModalBackground.Cursor = Cursors.Arrow;
+        _partModalBackground.Cursor = Cursors.Arrow;
     }
 
     //--------------------------
