@@ -444,7 +444,6 @@ public class UctVirtualDesktop : Control
         appButton.SetBinding(UctImageButton.WidthProperty, new Binding(nameof(TaskbarSize)) { Source = this });
         appButton.SetResourceReference(UctImageButton.HighlightBackgroundProperty, "UctTaskbarHighlightedColor");
         appButton.SetResourceReference(UctImageButton.SelectedBackgroundProperty, "UctTaskbarSelectedColor");
-        appButton.MouseLeftButtonDown += AppButton_OnMouseLeftButtonDown;
         RunningAppInfo newApp = new RunningAppInfo()
         {
             Window = window,
@@ -457,7 +456,7 @@ public class UctVirtualDesktop : Control
     {
         if (_runningAppInfos.Any(it => it.Window == window))
         {
-            var appInfo =  _runningAppInfos.First(it => it.Window == window);
+            var appInfo = _runningAppInfos.First(it => it.Window == window);
             CloseApplication(appInfo);
         }
     }
@@ -553,26 +552,13 @@ public class UctVirtualDesktop : Control
             appInfo.Window.SetResourceReference(UctVirtualDesktopWindow.ForegroundProperty,
                 "UctCommonForegroundColor");
             SetAppInfo(appInfo.Window, appInfo);
-            appInfo.Window.CloseRequested += (sender, args) =>
-                CloseApplication(GetAppInfo(sender as UctVirtualDesktopWindow));
-            appInfo.Window.MinimizeRequested += (sender, args) =>
-                MinimizeApplication(GetAppInfo(sender as UctVirtualDesktopWindow));
-            appInfo.Window.MaximizeRequested += (sender, args) =>
-                ToogleApplicationMaximize(GetAppInfo(sender as UctVirtualDesktopWindow));
-            appInfo.Window.Activated += (sender, args) =>
-                ActivateApplication(GetAppInfo(sender as UctVirtualDesktopWindow));
-            appInfo.Window.GlobalMouseOperationStarted += (sender, args) =>
-            {
-                _brdGlobalMouseActions.IsHitTestVisible = true;
-                _brdGlobalMouseActions.Cursor = args.DesiredCursor;
-                args.MouseHost = _brdGlobalMouseActions;
-                args.Handled = true;
-            };
-            appInfo.Window.GlobalMouseOperationFinished += (sender, args) =>
-            {
-                _brdGlobalMouseActions.IsHitTestVisible = false;
-                _brdGlobalMouseActions.Cursor = null;
-            };
+            appInfo.Window.CloseRequested += VirtualWindowOnCloseRequested;
+            appInfo.Window.MinimizeRequested += VirtualWindowOnMinimizeRequested;
+            appInfo.Window.MaximizeRequested += VirtualWindowOnMaximizeRequested;
+            appInfo.Window.Activated += VirtualWindowOnActivated;
+            appInfo.Window.GlobalMouseOperationStarted += VirtualWindowOnGlobalMouseOperationStarted;
+            appInfo.Window.GlobalMouseOperationFinished += VirtualWindowOnGlobalMouseOperationFinished;
+            appInfo.AppButton.MouseLeftButtonDown += AppButton_OnMouseLeftButtonDown;
             _gridContent.Children.Add(appInfo.Window);
         }
 
@@ -630,6 +616,18 @@ public class UctVirtualDesktop : Control
                     break;
                 }
             }
+            
+            appInfo.Window.CloseRequested -= VirtualWindowOnCloseRequested;
+            appInfo.Window.MinimizeRequested -= VirtualWindowOnMinimizeRequested;
+            appInfo.Window.MaximizeRequested -= VirtualWindowOnMaximizeRequested;
+            appInfo.Window.Activated -= VirtualWindowOnActivated;
+            appInfo.Window.GlobalMouseOperationStarted -= VirtualWindowOnGlobalMouseOperationStarted;
+            appInfo.Window.GlobalMouseOperationFinished -= VirtualWindowOnGlobalMouseOperationFinished;
+            appInfo.AppButton.MouseLeftButtonDown -= AppButton_OnMouseLeftButtonDown;
+
+            BindingOperations.ClearBinding(appInfo.Window, UctVirtualDesktopWindow.MinimizedButtonTemplateProperty);
+            BindingOperations.ClearBinding(appInfo.Window, UctVirtualDesktopWindow.MaximizedButtonTemplateProperty);
+            BindingOperations.ClearBinding(appInfo.Window, UctVirtualDesktopWindow.CloseButtonTemplateProperty);
             _runningAppInfos.Remove(appInfo);
             _applicationPanel.Children.Remove(appInfo.AppButton);
             if (removePanel != null)
@@ -643,6 +641,40 @@ public class UctVirtualDesktop : Control
     //      events
     //
     //--------------------------
+
+    private void VirtualWindowOnGlobalMouseOperationFinished(object? sender, EventArgs e)
+    {
+        _brdGlobalMouseActions.IsHitTestVisible = false;
+        _brdGlobalMouseActions.Cursor = null;
+    }
+
+    private void VirtualWindowOnGlobalMouseOperationStarted(object? sender, GlobalMouseOperationEventArgs e)
+    {
+        _brdGlobalMouseActions.IsHitTestVisible = true;
+        _brdGlobalMouseActions.Cursor = e.DesiredCursor;
+        e.MouseHost = _brdGlobalMouseActions;
+        e.Handled = true;
+    }
+
+    private void VirtualWindowOnActivated(object? sender, EventArgs e)
+    {
+        ActivateApplication(GetAppInfo(sender as UctVirtualDesktopWindow));
+    }
+
+    private void VirtualWindowOnMaximizeRequested(object? sender, EventArgs e)
+    {
+        ToogleApplicationMaximize(GetAppInfo(sender as UctVirtualDesktopWindow));
+    }
+
+    private void VirtualWindowOnCloseRequested(object? sender, EventArgs e)
+    {
+        CloseApplication(GetAppInfo(sender as UctVirtualDesktopWindow));
+    }
+
+    private void VirtualWindowOnMinimizeRequested(object? sender, EventArgs e)
+    {
+        MinimizeApplication(GetAppInfo(sender as UctVirtualDesktopWindow));
+    }
 
     private void CpStartButton_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
