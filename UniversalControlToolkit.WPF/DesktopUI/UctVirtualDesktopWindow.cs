@@ -359,6 +359,14 @@ public class UctVirtualDesktopWindow : Control
     {
         if (_parentWindow != null)
             _parentWindow.SetBlockedByModal(false);
+        UctVirtualDesktop._currentDesktop?.CloseWindow(this, false);
+    }
+
+    public void Activate()
+    {
+        if (UctVirtualDesktop._currentDesktop == null)
+            throw new InvalidOperationException("Cannot create a new Window without the Virtual Desktop");
+        UctVirtualDesktop._currentDesktop.ActivateWindow(this);
     }
 
     private void SetBlockedByModal(bool blocked)

@@ -425,6 +425,11 @@ public class UctVirtualDesktop : Control
     //
     //--------------------------
 
+    internal void ActivateWindow(UctVirtualDesktopWindow window)
+    {
+        ActivateApplication(GetAppInfo(window));
+    }
+
     internal void ShowWindow(UctVirtualDesktopWindow window)
     {
         _brdModal.Visibility = _brdTaskbarMenu.Visibility = Visibility.Collapsed;
@@ -452,12 +457,12 @@ public class UctVirtualDesktop : Control
         LaunchOrResumeApplication(newApp);
     }
 
-    internal void CloseWindow(UctVirtualDesktopWindow window)
+    internal void CloseWindow(UctVirtualDesktopWindow window, bool triggerOnClosed = true)
     {
         if (_runningAppInfos.Any(it => it.Window == window))
         {
             var appInfo = _runningAppInfos.First(it => it.Window == window);
-            CloseApplication(appInfo);
+            CloseApplication(appInfo, triggerOnClosed);
         }
     }
 
@@ -602,7 +607,7 @@ public class UctVirtualDesktop : Control
             appInfo.Window.IsMaximized = !appInfo.Window.IsMaximized;
     }
 
-    private void CloseApplication(RunningAppInfo? appInfo)
+    private void CloseApplication(RunningAppInfo? appInfo, bool triggerOnClosed = true)
     {
         if (appInfo != null && _runningAppInfos.Contains(appInfo))
         {
@@ -612,11 +617,12 @@ public class UctVirtualDesktop : Control
                 if (item is UctVirtualDesktopWindow window && window == appInfo.Window)
                 {
                     removePanel = item;
-                    window.TriggerOnClosed();
+                    if (triggerOnClosed)
+                        window.TriggerOnClosed();
                     break;
                 }
             }
-            
+
             appInfo.Window.CloseRequested -= VirtualWindowOnCloseRequested;
             appInfo.Window.MinimizeRequested -= VirtualWindowOnMinimizeRequested;
             appInfo.Window.MaximizeRequested -= VirtualWindowOnMaximizeRequested;
