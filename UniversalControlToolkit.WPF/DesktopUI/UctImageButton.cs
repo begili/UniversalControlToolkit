@@ -42,6 +42,8 @@ public class UctImageButton : Control
             Child = vb
         };
         ToolTipService.SetInitialShowDelay(_brdHost, 0);
+        _brdHost.SetBinding(Border.CornerRadiusProperty, 
+            new Binding(nameof(CornerRadius)) { Source = this });
         _brdHost.SetBinding(Border.BackgroundProperty,
             new MultiBinding()
             {
@@ -116,6 +118,16 @@ public class UctImageButton : Control
     public static readonly DependencyProperty SelectedBackgroundProperty =
         DependencyProperty.Register(nameof(SelectedBackground), typeof(Brush), typeof(UctImageButton),
             new PropertyMetadata(Brushes.SkyBlue));
+
+    public CornerRadius CornerRadius
+    {
+        get => (CornerRadius)GetValue(CornerRadiusProperty);
+        set => SetValue(CornerRadiusProperty, value);
+    }
+
+    public static readonly DependencyProperty CornerRadiusProperty =
+        DependencyProperty.Register(nameof(CornerRadius), typeof(CornerRadius), typeof(UctImageButton),
+            new PropertyMetadata(new CornerRadius(0)));
 
     //--------------------------
     //

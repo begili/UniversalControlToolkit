@@ -1,10 +1,24 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:modal="clr-namespace:UniversalControlToolkit.WPF.DesktopUI.Modal">
+                    xmlns:modal="clr-namespace:UniversalControlToolkit.WPF.DesktopUI.Modal"
+                    xmlns:desktopUi="clr-namespace:UniversalControlToolkit.WPF.DesktopUI">
     <Style TargetType="modal:UctModal">
         <Setter Property="Foreground" Value="{DynamicResource UctCommonForegroundColor}"></Setter>
         <Setter Property="ContentBackground" Value="{DynamicResource UctDefaultBackgroundColor}"></Setter>
         <Setter Property="WindowBackground" Value="{DynamicResource UctWindowBackgroundColor}"></Setter>
         <Setter Property="Background" Value="{DynamicResource UctModalBackgroundColor}"></Setter>
+        <Setter Property="CornerRadius" Value="10"></Setter>
+    </Style>
+
+    <Style TargetType="modal:UctFlyIn">
+        <Setter Property="Foreground" Value="{DynamicResource UctCommonForegroundColor}"></Setter>
+        <Setter Property="Background" Value="{DynamicResource UctWindowBackgroundColor}"></Setter>
+        <Setter Property="ContentBackground" Value="{DynamicResource UctDefaultBackgroundColor}"></Setter>
+        <Setter Property="BorderBrush" Value="{DynamicResource UctCommonForegroundColor}"></Setter>
+        <Setter Property="CornerRadius" Value="10"></Setter>
+    </Style>
+
+    <Style TargetType="desktopUi:UctImageButton">
+        <Setter Property="CornerRadius" Value="10"></Setter>
     </Style>
 </ResourceDictionary>

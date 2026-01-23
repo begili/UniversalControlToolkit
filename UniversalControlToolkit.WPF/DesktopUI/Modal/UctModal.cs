@@ -97,6 +97,8 @@ public class UctModal : Control
         };
         brdContentBackground.SetBinding(Border.BackgroundProperty,
             new Binding(nameof(ContentBackground)) { Source = this });
+        brdContentBackground.SetBinding(Border.CornerRadiusProperty,
+            new Binding(nameof(CornerRadius)) { Source = this });
         Grid.SetColumnSpan(brdContentBackground, 2);
         Grid.SetRow(brdContentBackground, 1);
         grdContent.Children.Add(brdContentBackground);
@@ -108,6 +110,8 @@ public class UctModal : Control
             VerticalAlignment = VerticalAlignment.Top
         };
         _brdModalWindow.SetBinding(Border.BackgroundProperty, new Binding(nameof(WindowBackground)) { Source = this });
+        _brdModalWindow.SetBinding(Border.CornerRadiusProperty, 
+            new Binding(nameof(CornerRadius)) { Source = this });
         _brdModalWindow.MouseMove += BrdModalWindowOnMouseMove;
         _brdModalWindow.MouseDown += BrdModalWindowOnMouseDown;
     }
@@ -204,6 +208,16 @@ public class UctModal : Control
 
     public static readonly DependencyProperty TitleProperty =
         DependencyProperty.Register(nameof(Title), typeof(string), typeof(UctModal), new PropertyMetadata("Title"));
+
+    public CornerRadius CornerRadius
+    {
+        get => (CornerRadius)GetValue(CornerRadiusProperty);
+        set => SetValue(CornerRadiusProperty, value);
+    }
+
+    public static readonly DependencyProperty CornerRadiusProperty =
+        DependencyProperty.Register(nameof(CornerRadius), typeof(CornerRadius), typeof(UctModal),
+            new PropertyMetadata(new CornerRadius(0)));
 
     //--------------------------
     //
